@@ -194,6 +194,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
   <div id="map-wrap">
     <div id="game-map"></div>
     <div class="map-hints" id="map-hints"></div>
+    <div id="map-click-hint" style="display:none;position:absolute;top:.5rem;left:50%;transform:translateX(-50%);z-index:900;background:rgba(11,31,58,.92);border:1px solid var(--yellow);border-radius:20px;padding:.3rem 1rem;font-size:.8rem;color:var(--yellow);pointer-events:none;white-space:nowrap;backdrop-filter:blur(4px)"></div>
   </div>
   <div class="q-panel" id="q-panel">
     <div class="q-section">Ask a question — each answer costs points</div>
@@ -210,9 +211,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
       <button class="q-btn" id="qbtn-3" onclick="openSuburbPicker()">
         In a suburb?<span class="q-cost">−250 pts</span>
       </button>
-      <button class="q-btn" id="qbtn-4" onclick="askQuestion(4)" style="grid-column:span 2">
-        Inside the M3?<span class="q-cost">−250 pts</span>
-      </button>
+
     </div>
     <div class="answer-log" id="answer-log"></div>
     <div class="guess-section">
@@ -229,10 +228,28 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
 <!-- ═══ ROAD PICKER ═══ -->
 <div id="road-picker">
   <div class="rp-sheet">
-    <div class="rp-title">Which road to compare?</div>
-    <input class="rp-search" id="rp-search" type="text" placeholder="Search roads… e.g. Hoddle, Bell" oninput="filterRoadList()"/>
-    <div class="rp-list" id="rp-list"></div>
-    <button class="rp-cancel" onclick="closeRoadPicker()">Cancel</button>
+    <!-- Step 1: pick the road -->
+    <div id="rp-step1">
+      <div class="rp-title">Which road to compare?</div>
+      <input class="rp-search" id="rp-search" type="text" placeholder="Search roads… e.g. Hoddle, Bell" oninput="filterRoadList()"/>
+      <button class="rp-cancel" style="margin-bottom:.5rem;border-color:var(--teal);color:var(--teal)" onclick="closeRoadPicker();enableMapClick('road')">👆 Tap road on map instead</button>
+      <div class="rp-list" id="rp-list"></div>
+      <button class="rp-cancel" onclick="closeRoadPicker()">Cancel</button>
+    </div>
+    <!-- Step 2: pick the axis -->
+    <div id="rp-step2" style="display:none">
+      <div class="rp-title" id="rp-step2-title">Direction to ask?</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:1rem" id="rp-step2-sub"></div>
+      <div style="display:flex;flex-direction:column;gap:.65rem;margin-bottom:1rem">
+        <button class="q-btn" style="font-size:.95rem;padding:.85rem" onclick="confirmRoadAxis('NS')">
+          North or South?
+        </button>
+        <button class="q-btn" style="font-size:.95rem;padding:.85rem" onclick="confirmRoadAxis('EW')">
+          East or West?
+        </button>
+      </div>
+      <button class="rp-cancel" onclick="backToRoadStep1()">← Back</button>
+    </div>
   </div>
 </div>
 
@@ -241,6 +258,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
   <div class="rp-sheet">
     <div class="rp-title">Which suburb?</div>
     <input class="rp-search" id="sp-search" type="text" placeholder="Search suburb… e.g. Richmond, Fitzroy" oninput="filterSuburbList()"/>
+    <button class="rp-cancel" style="margin-bottom:.5rem;border-color:var(--teal);color:var(--teal)" onclick="closeSuburbPicker();enableMapClick('suburb')">👆 Tap suburb on map instead</button>
     <div class="rp-list" id="sp-list"></div>
     <button class="rp-cancel" onclick="closeSuburbPicker()">Cancel</button>
   </div>
@@ -311,7 +329,7 @@ const STREETS = [
   {name:"Dandenong Road",lat:-37.8774,lng:145.0302,o:"EW",region:"south east",m3:false,s:["Malvern East","Caulfield","Carnegie","Murrumbeena"]},
   {name:"Alma Road",lat:-37.8640,lng:144.9940,o:"EW",region:"south east",m3:false,s:["St Kilda East","Caulfield North"]},
   {name:"Glen Eira Road",lat:-37.8820,lng:144.9990,o:"NS",region:"south east",m3:false,s:["Ripponlea","Elsternwick","Caulfield North","Carnegie"]},
-  {name:"Inkerman Street",lat:-37.8620,lng:144.9890,o:"EW",region:"south",m3:false,s:["St Kilda","Elwood","St Kilda East"]},
+  {name:"Inkerman Street",lat:-37.8660,lng:144.9850,o:"EW",region:"south",m3:false,s:["St Kilda","Elwood","St Kilda East"]},
   {name:"Fitzroy Street St Kilda",lat:-37.8643,lng:144.9792,o:"NS",region:"south",m3:false,s:["St Kilda","St Kilda East"]},
   {name:"Nepean Highway",lat:-37.9620,lng:145.0512,o:"NS",region:"south",m3:false,s:["Moorabbin","Cheltenham","Mentone","Frankston"]},
   {name:"South Road Moorabbin",lat:-37.9265,lng:145.0500,o:"EW",region:"south",m3:false,s:["Moorabbin","Bentleigh East"]},
@@ -482,8 +500,16 @@ function renderLB(){
 // ══════════════════════════════════════
 // GAME START
 // ══════════════════════════════════════
+let lastStreetName = null;
+
 function startGame(){
-  currentStreet=STREETS[Math.floor(Math.random()*STREETS.length)];
+  // Pick a random street, but not the same as last time
+  let pick;
+  do { pick = STREETS[Math.floor(Math.random()*STREETS.length)]; }
+  while(STREETS.length > 1 && pick.name === lastStreetName);
+  currentStreet = pick;
+  lastStreetName = pick.name;
+
   currentScore=10000;usedQ=new Set();
 
   document.getElementById('hdr-player').textContent=currentUser||'Guest';
@@ -507,6 +533,7 @@ function startGame(){
         attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:18
       }).addTo(gameMap);
       L.control.zoom({position:'bottomleft'}).addTo(gameMap);
+      gameMap.on('click', handleMapClick);
       // Q1 is free — answer it immediately
       askQuestion(0);
     });
@@ -521,8 +548,8 @@ function updateScore(){
 // ══════════════════════════════════════
 // QUESTIONS
 // ══════════════════════════════════════
-const Q_COST=[0,500,100,250,250];
-const Q_LABEL=["Part of Melbourne","N–S or E–W","N/S/E/W of a road","In a suburb","Inside the M3"];
+const Q_COST=[0,500,100,250];
+const Q_LABEL=["Part of Melbourne","N–S or E–W","N/S/E/W of a road","In a suburb"];
 
 function askQuestion(idx){
   if(idx===2){openRoadPicker();return;}
@@ -547,7 +574,7 @@ function getAnswer(idx,param){
     const hit=s.s.find(x=>x.toLowerCase()===param?.toLowerCase());
     return hit?`Yes, it passes through ${hit}`:`No, it does not pass through ${param}`;
   }
-  if(idx===4) return s.m3?'Yes — inside / east of the M3 ring':'No — outside the M3 ring';
+  if(idx===4) return ''; // unused
 }
 
 function answerDirectional(refName){
@@ -555,39 +582,186 @@ function answerDirectional(refName){
   const s=currentStreet;
   const ref=STREETS.find(r=>r.name.toLowerCase()===refName.toLowerCase());
   if(!ref) return `Cannot find "${refName}" in the database.`;
-  const latDiff=Math.abs(s.lat-ref.lat),lngDiff=Math.abs(s.lng-ref.lng);
-  const ns=s.lat<ref.lat?'North':'South';
-  const ew=s.lng<ref.lng?'West':'East';
-  // if very close on one axis, say predominantly one direction
-  if(latDiff<0.003) return `Roughly the same latitude as ${refName}, but slightly ${ew}`;
-  if(lngDiff<0.005) return `Roughly the same longitude as ${refName}, but slightly ${ns}`;
-  return `It is <strong>${ns}</strong> and <strong>${ew}</strong> of ${refName}`;
+
+  // Lat difference: positive = secret is SOUTH of ref (higher lat = further south in Melbourne)
+  // Lng difference: positive = secret is EAST of ref (higher lng = further east)
+  const latDiff = s.lat - ref.lat;  // +ve = secret is south
+  const lngDiff = s.lng - ref.lng;  // +ve = secret is east
+
+  // Scale differences to account for Melbourne's roughly 1.4:1 lng:lat degree ratio
+  const scaledLatDiff = Math.abs(latDiff) * 111;    // km approx
+  const scaledLngDiff = Math.abs(lngDiff) * 80;     // km approx (at Melbourne's latitude)
+
+  // Choose which axis to report based on the SECRET road's orientation:
+  // - If secret road runs NS: it spans many latitudes, so its E/W position is the useful clue
+  // - If secret road runs EW: it spans many longitudes, so its N/S position is the useful clue
+  // - If diagonal or unclear: use whichever difference is larger
+  let direction;
+  if(s.o === 'NS'){
+    // Secret is a NS road → tell E/W relative to reference
+    direction = lngDiff >= 0 ? 'East' : 'West';
+    if(scaledLngDiff < 0.5) direction = 'Almost the same east-west position as';
+    else direction = `<strong>${direction}</strong> of`;
+  } else if(s.o === 'EW'){
+    // Secret is an EW road → tell N/S relative to reference
+    direction = latDiff >= 0 ? 'South' : 'North';
+    if(scaledLatDiff < 0.5) direction = 'Almost the same north-south position as';
+    else direction = `<strong>${direction}</strong> of`;
+  } else {
+    // Diagonal road — use dominant axis
+    if(scaledLatDiff >= scaledLngDiff){
+      direction = latDiff >= 0 ? 'South' : 'North';
+      direction = `<strong>${direction}</strong> of`;
+    } else {
+      direction = lngDiff >= 0 ? 'East' : 'West';
+      direction = `<strong>${direction}</strong> of`;
+    }
+  }
+
+  return `It is ${direction} ${refName}`;
+}
+
+function answerDirectionalAxis(refName, axis){
+  const s = currentStreet;
+  const ref = STREETS.find(r=>r.name.toLowerCase()===refName.toLowerCase());
+  if(!ref) return `Cannot find "${refName}" in the database.`;
+
+  const latDiff = s.lat - ref.lat;  // +ve = secret is south (higher lat)
+  const lngDiff = s.lng - ref.lng;  // +ve = secret is east (higher lng)
+  const scaledLatDiff = Math.abs(latDiff) * 111;
+  const scaledLngDiff = Math.abs(lngDiff) * 80;
+
+  if(axis === 'NS'){
+    if(scaledLatDiff < 0.4) return `Roughly the same latitude as <strong>${refName}</strong>`;
+    const dir = latDiff > 0 ? 'South' : 'North';
+    return `<strong>${dir}</strong> of ${refName}`;
+  } else {
+    if(scaledLngDiff < 0.4) return `Roughly the same longitude as <strong>${refName}</strong>`;
+    const dir = lngDiff > 0 ? 'East' : 'West';
+    return `<strong>${dir}</strong> of ${refName}`;
+  }
+}
+
+
+// Mode: null | 'road' | 'suburb'
+let mapClickMode = null;
+
+function enableMapClick(mode){
+  mapClickMode = mode;
+  const el = document.getElementById('map-wrap');
+  el.style.cursor = 'crosshair';
+  // Show a hint overlay
+  const hint = document.getElementById('map-click-hint');
+  hint.textContent = mode === 'road' ? '👆 Tap a road on the map' : '👆 Tap a suburb on the map';
+  hint.style.display = 'block';
+}
+
+function disableMapClick(){
+  mapClickMode = null;
+  document.getElementById('map-wrap').style.cursor = '';
+  document.getElementById('map-click-hint').style.display = 'none';
+}
+
+async function handleMapClick(e){
+  if(!mapClickMode) return;
+  const {lat,lng} = e.latlng;
+  const mode = mapClickMode;
+  disableMapClick();
+
+  // Show loading in picker search box
+  if(mode === 'road'){
+    document.getElementById('rp-search').value = 'Looking up location…';
+    document.getElementById('road-picker').classList.add('open');
+  } else {
+    document.getElementById('sp-search').value = 'Looking up location…';
+    document.getElementById('suburb-picker').classList.add('open');
+  }
+
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,{headers:{'Accept-Language':'en'}});
+    const data = await res.json();
+    const addr = data.address || {};
+
+    if(mode === 'road'){
+      // Try to find the road in our list
+      const roadName = addr.road || addr.pedestrian || addr.path || '';
+      const matched = STREETS.find(s=>s.name.toLowerCase().includes(roadName.toLowerCase())||roadName.toLowerCase().includes(s.name.toLowerCase().replace(/ (street|road|avenue|parade|highway|lane|drive|place|court|boulevard|crescent)/i,'')));
+      if(matched){
+        document.getElementById('rp-search').value = matched.name;
+      } else {
+        document.getElementById('rp-search').value = roadName;
+      }
+      filterRoadList();
+    } else {
+      // Find suburb
+      const sub = addr.suburb || addr.city_district || addr.town || addr.village || '';
+      document.getElementById('sp-search').value = sub;
+      filterSuburbList();
+    }
+  } catch(err){
+    if(mode === 'road'){
+      document.getElementById('rp-search').value = '';
+      filterRoadList();
+    } else {
+      document.getElementById('sp-search').value = '';
+      filterSuburbList();
+    }
+  }
 }
 
 // ── ROAD PICKER (for Q2) ──
 function openRoadPicker(){
+  disableMapClick();
+  pendingRoadName = null;
+  document.getElementById('rp-step1').style.display = 'block';
+  document.getElementById('rp-step2').style.display = 'none';
   document.getElementById('rp-search').value='';
   filterRoadList();
   document.getElementById('road-picker').classList.add('open');
 }
-function closeRoadPicker(){document.getElementById('road-picker').classList.remove('open');}
+function closeRoadPicker(){
+  document.getElementById('road-picker').classList.remove('open');
+  document.getElementById('rp-step1').style.display = 'block';
+  document.getElementById('rp-step2').style.display = 'none';
+  pendingRoadName = null;
+}
 function filterRoadList(){
   const q=document.getElementById('rp-search').value.toLowerCase();
   const filtered=ALL_REF_ROADS.filter(r=>r.toLowerCase().includes(q)&&r.toLowerCase()!==currentStreet.name.toLowerCase());
   document.getElementById('rp-list').innerHTML=filtered.map(r=>`<div class="rp-item" onclick="pickRoad('${r.replace(/'/g,"\\'")}')">📍 ${r}</div>`).join('');
 }
+let pendingRoadName = null;
+
 function pickRoad(name){
+  // Move to step 2 — axis selection
+  pendingRoadName = name;
+  document.getElementById('rp-step1').style.display = 'none';
+  document.getElementById('rp-step2').style.display = 'block';
+  document.getElementById('rp-step2-title').textContent = name;
+  document.getElementById('rp-step2-sub').textContent = 'Is the secret road north/south of it, or east/west of it?';
+}
+
+function backToRoadStep1(){
+  pendingRoadName = null;
+  document.getElementById('rp-step2').style.display = 'none';
+  document.getElementById('rp-step1').style.display = 'block';
+}
+
+function confirmRoadAxis(axis){
+  const name = pendingRoadName;
+  pendingRoadName = null;
   closeRoadPicker();
-  // deduct cost, can ask multiple times
   currentScore=Math.max(0,currentScore-Q_COST[2]);
   updateScore();flashPenalty();
-  const ans=getAnswer(2,name);
-  addAnswer(`<strong>N/S/E/W of ${name}:</strong> ${ans}`);
-  addHint(`vs ${name}: ${ans.replace(/<[^>]+>/g,'')}`);
+  const ans = answerDirectionalAxis(name, axis);
+  const axisLabel = axis === 'NS' ? 'N or S' : 'E or W';
+  addAnswer(`<strong>${axisLabel} of ${name}:</strong> ${ans}`);
+  addHint(`${axisLabel} of ${name}: ${ans.replace(/<[^>]+>/g,'')}`);
 }
 
 // ── SUBURB PICKER (for Q3) ──
 function openSuburbPicker(){
+  disableMapClick();
   document.getElementById('sp-search').value='';
   filterSuburbList();
   document.getElementById('suburb-picker').classList.add('open');
@@ -667,7 +841,7 @@ function submitGuess(){
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     if(resultMap){resultMap.remove();resultMap=null;}
     resultMap=L.map('result-map',{zoomControl:false,dragging:false,scrollWheelZoom:false})
-      .setView([currentStreet.lat,currentStreet.lng],13);
+      .setView([currentStreet.lat,currentStreet.lng],14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
       attribution:'© OpenStreetMap contributors',maxZoom:18
     }).addTo(resultMap);
