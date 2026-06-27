@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melbourne Street Guesser</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--navy:#0B1F3A;--yellow:#FFD54F;--teal:#4A9B8E;--offwhite:#F0EDE8;--red:#D94F3D;--nl:#162D52;--nm:#1E3A5F;--muted:#8BA3C0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);color:var(--offwhite);overflow-x:hidden}
+
+/* SCREENS */
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* LANDING */
+#screen-landing{align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse at 30% 40%,#162D52 0%,var(--navy) 70%)}
+.landing-inner{max-width:400px;width:100%;text-align:center}
+.tram-icon{font-size:2.8rem;margin-bottom:.3rem}
+.landing-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,12vw,5rem);line-height:1;color:var(--yellow);letter-spacing:2px;margin-bottom:.2rem}
+.landing-sub{font-size:.9rem;color:var(--muted);margin-bottom:2rem;letter-spacing:.05em}
+.tab-bar{display:flex;border:1.5px solid var(--nm);border-radius:8px;overflow:hidden;margin-bottom:1.25rem}
+.tab-btn{flex:1;padding:.6rem;background:transparent;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s}
+.tab-btn.active{background:var(--nm);color:var(--offwhite)}
+.auth-panel{display:none}.auth-panel.active{display:block}
+.fl{text-align:left;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem}
+.fi{width:100%;padding:.65rem .9rem;background:var(--nl);border:1.5px solid var(--nm);border-radius:6px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.92rem;outline:none;margin-bottom:.9rem;transition:border-color .2s}
+.fi:focus{border-color:var(--teal)}
+.btn-primary{width:100%;padding:.8rem;background:var(--yellow);color:var(--navy);border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:1.5px;cursor:pointer;transition:opacity .2s,transform .1s}
+.btn-primary:hover{opacity:.9}.btn-primary:active{transform:scale(.98)}
+.auth-msg{font-size:.8rem;color:var(--red);margin-top:.4rem;min-height:1.1em}
+.divider{color:var(--muted);font-size:.78rem;margin:.9rem 0}
+.btn-ghost{width:100%;padding:.65rem;background:transparent;border:1.5px solid var(--nm);border-radius:6px;color:var(--muted);font-family:'Inter',sans-serif;font-size:.88rem;cursor:pointer;transition:border-color .2s,color .2s;margin-bottom:.5rem}
+.btn-ghost:hover{border-color:var(--teal);color:var(--offwhite)}
+
+/* LEADERBOARD */
+#screen-leaderboard{padding:2rem;align-items:center;background:radial-gradient(ellipse at 70% 20%,#162D52,var(--navy))}
+.lb-inner{max-width:400px;width:100%}
+.lb-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--yellow);letter-spacing:2px;margin-bottom:.2rem}
+.lb-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.25rem}
+.lb-row{display:flex;align-items:center;padding:.7rem 1rem;background:var(--nl);border-radius:8px;margin-bottom:.45rem;border-left:3px solid transparent}
+.lb-row.gold{border-left-color:var(--yellow)}.lb-row.silver{border-left-color:#C0C0C0}.lb-row.bronze{border-left-color:#CD7F32}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--muted);width:2rem}
+.lb-name{flex:1;font-weight:600;font-size:.88rem}
+.lb-score{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--yellow)}
+.lb-games{font-size:.72rem;color:var(--muted);margin-left:.4rem}
+.lb-empty{text-align:center;color:var(--muted);padding:2rem 0;font-size:.88rem}
+.back-btn{display:inline-flex;align-items:center;gap:.4rem;background:transparent;border:1.5px solid var(--nm);color:var(--muted);padding:.45rem .9rem;border-radius:6px;font-family:'Inter',sans-serif;font-size:.82rem;cursor:pointer;margin-bottom:1.25rem;transition:all .2s}
+.back-btn:hover{border-color:var(--teal);color:var(--offwhite)}
+
+/* GAME */
+#screen-game{height:100vh;overflow:hidden}
+.game-header{background:var(--nl);padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--nm);flex-shrink:0}
+.game-logo{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;color:var(--yellow);letter-spacing:1px}
+.player-chip{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:.3rem}
+.player-chip span{color:var(--offwhite);font-weight:600}
+
+.score-rail{background:var(--nl);padding:.6rem 1rem .8rem;border-bottom:1px solid var(--nm);flex-shrink:0}
+.score-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.35rem}
+.score-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.score-value{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;color:var(--yellow);line-height:1;transition:color .3s}
+.score-value.penalty{color:var(--red)}
+.score-track{height:5px;background:var(--nm);border-radius:3px;overflow:hidden}
+.score-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--yellow));border-radius:3px;transition:width .5s ease}
+
+/* MAP — fixed height so Leaflet can measure it */
+#map-wrap{height:220px;flex-shrink:0;position:relative}
+#game-map{width:100%;height:100%}
+.map-hints{position:absolute;bottom:.5rem;left:.5rem;right:.5rem;z-index:800;display:flex;flex-wrap:wrap;gap:.3rem;pointer-events:none}
+.hint-chip{background:rgba(11,31,58,.88);border:1px solid var(--teal);border-radius:12px;padding:.22rem .6rem;font-size:.72rem;color:var(--teal);backdrop-filter:blur(4px)}
+
+/* QUESTION PANEL — scrollable */
+.q-panel{flex:1;overflow-y:auto;padding:.75rem 1rem;background:var(--navy)}
+.q-section{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.6rem}
+.q-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.65rem}
+.q-btn{padding:.6rem .7rem;background:var(--nl);border:1.5px solid var(--nm);border-radius:8px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.78rem;cursor:pointer;text-align:left;line-height:1.3;transition:all .2s}
+.q-btn:hover:not(:disabled){border-color:var(--teal);background:var(--nm)}
+.q-btn:disabled,.q-btn.used{opacity:.35;cursor:not-allowed}
+.q-cost{display:block;font-family:'Bebas Neue',sans-serif;font-size:.82rem;color:var(--red);margin-top:.18rem}
+.q-cost.free{color:var(--teal)}
+
+/* ANSWER LOG */
+.answer-log{margin-bottom:.65rem;display:flex;flex-direction:column;gap:.4rem}
+.answer-bubble{background:var(--nl);border-radius:8px;padding:.6rem .8rem;font-size:.85rem;border-left:3px solid var(--teal);line-height:1.5}
+
+/* ROAD PICKER MODAL */
+#road-picker{display:none;position:fixed;inset:0;z-index:2000;background:rgba(11,31,58,.96);align-items:flex-end;justify-content:center}
+#road-picker.open{display:flex}
+.rp-sheet{background:var(--nl);border-radius:16px 16px 0 0;padding:1.25rem 1rem 2rem;width:100%;max-width:480px;max-height:70vh;display:flex;flex-direction:column}
+.rp-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--yellow);letter-spacing:1px;margin-bottom:.75rem}
+.rp-search{width:100%;padding:.65rem .9rem;background:var(--navy);border:1.5px solid var(--nm);border-radius:6px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.92rem;outline:none;margin-bottom:.65rem}
+.rp-search:focus{border-color:var(--teal)}
+.rp-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem}
+.rp-item{padding:.6rem .85rem;background:var(--navy);border-radius:6px;font-size:.88rem;cursor:pointer;transition:background .15s;border:1px solid transparent}
+.rp-item:hover{background:var(--nm);border-color:var(--teal)}
+.rp-cancel{margin-top:.65rem;width:100%;padding:.65rem;background:transparent;border:1.5px solid var(--nm);border-radius:6px;color:var(--muted);font-family:'Inter',sans-serif;font-size:.88rem;cursor:pointer}
+
+/* SUBURB PICKER */
+#suburb-picker{display:none;position:fixed;inset:0;z-index:2000;background:rgba(11,31,58,.96);align-items:flex-end;justify-content:center}
+#suburb-picker.open{display:flex}
+
+/* GUESS */
+.guess-section{margin-top:.1rem}
+.guess-row{display:flex;gap:.45rem;margin-bottom:.35rem}
+.guess-input{flex:1;padding:.65rem .9rem;background:var(--nl);border:1.5px solid var(--nm);border-radius:6px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.92rem;outline:none;transition:border-color .2s}
+.guess-input:focus{border-color:var(--yellow)}
+.guess-submit{padding:.65rem 1.1rem;background:var(--yellow);color:var(--navy);border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1px;cursor:pointer;white-space:nowrap}
+.guess-submit:disabled{opacity:.5;cursor:not-allowed}
+.ac-list{background:var(--nl);border:1px solid var(--nm);border-radius:6px;max-height:140px;overflow-y:auto;display:none}
+.ac-list.open{display:block}
+.ac-item{padding:.5rem .9rem;font-size:.85rem;cursor:pointer;transition:background .15s}
+.ac-item:hover{background:var(--nm)}
+
+/* RESULT */
+#screen-result{align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse at 50% 50%,#162D52,var(--navy))}
+.result-inner{max-width:400px;width:100%;text-align:center}
+.result-verdict{font-family:'Bebas Neue',sans-serif;font-size:3.2rem;line-height:1;margin-bottom:.4rem}
+.result-verdict.win{color:var(--yellow)}.result-verdict.lose{color:var(--red)}
+.result-street{font-size:.92rem;color:var(--muted);margin-bottom:1rem}
+.result-street strong{color:var(--offwhite)}
+.result-map-wrap{border-radius:10px;overflow:hidden;height:170px;margin-bottom:1.1rem}
+#result-map{width:100%;height:100%}
+.result-box{background:var(--nl);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.result-pts{font-family:'Bebas Neue',sans-serif;font-size:3.8rem;color:var(--yellow);line-height:1}
+.result-pts-lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+.result-hi{font-size:.82rem;color:var(--teal)}
+.new-badge{display:inline-block;background:var(--yellow);color:var(--navy);font-family:'Bebas Neue',sans-serif;font-size:.85rem;padding:.15rem .6rem;border-radius:4px;margin-left:.4rem;letter-spacing:1px}
+.result-actions{display:flex;gap:.65rem}
+.result-actions .btn-primary{flex:1}.result-actions .btn-ghost{flex:1}
+</style>
+</head>
+<body>
+
+<!-- ═══ LANDING ═══ -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-inner">
+    <div class="tram-icon">🚋</div>
+    <div class="landing-title">MELB<br>STREETS</div>
+    <div class="landing-sub">HOW WELL DO YOU KNOW THE GRID?</div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('login')">Log In</button>
+      <button class="tab-btn" onclick="switchTab('register')">Sign Up</button>
+    </div>
+    <div id="panel-login" class="auth-panel active">
+      <div class="fl">Username</div>
+      <input class="fi" id="login-user" type="text" placeholder="username" autocomplete="username"/>
+      <div class="fl">Password</div>
+      <input class="fi" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"/>
+      <button class="btn-primary" onclick="doLogin()">LET'S GO</button>
+      <div class="auth-msg" id="login-msg"></div>
+    </div>
+    <div id="panel-register" class="auth-panel">
+      <div class="fl">Username</div>
+      <input class="fi" id="reg-user" type="text" placeholder="choose a username" autocomplete="username"/>
+      <div class="fl">Password</div>
+      <input class="fi" id="reg-pass" type="password" placeholder="••••••••" autocomplete="new-password"/>
+      <div class="fl">Confirm Password</div>
+      <input class="fi" id="reg-pass2" type="password" placeholder="••••••••" autocomplete="new-password"/>
+      <button class="btn-primary" onclick="doRegister()">CREATE ACCOUNT</button>
+      <div class="auth-msg" id="reg-msg"></div>
+    </div>
+    <div class="divider">— or —</div>
+    <button class="btn-ghost" onclick="playAsGuest()">Play as Guest</button>
+    <button class="btn-ghost" onclick="showScreen('leaderboard')">🏆 Leaderboard</button>
+  </div>
+</div>
+
+<!-- ═══ LEADERBOARD ═══ -->
+<div id="screen-leaderboard" class="screen">
+  <div class="lb-inner" style="padding:2rem">
+    <button class="back-btn" onclick="showScreen('landing')">← Back</button>
+    <div class="lb-title">LEADERBOARD</div>
+    <div class="lb-sub">Top scores across all players</div>
+    <div id="lb-list"></div>
+  </div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="screen-game" class="screen">
+  <div class="game-header">
+    <div class="game-logo">🚋 MELB STREETS</div>
+    <div class="player-chip">Playing as <span id="hdr-player">Guest</span></div>
+  </div>
+  <div class="score-rail">
+    <div class="score-row">
+      <div class="score-label">Score</div>
+      <div class="score-value" id="score-display">10,000</div>
+    </div>
+    <div class="score-track"><div class="score-fill" id="score-fill" style="width:100%"></div></div>
+  </div>
+  <div id="map-wrap">
+    <div id="game-map"></div>
+    <div class="map-hints" id="map-hints"></div>
+  </div>
+  <div class="q-panel" id="q-panel">
+    <div class="q-section">Ask a question — each answer costs points</div>
+    <div class="q-grid">
+      <button class="q-btn" id="qbtn-0" onclick="askQuestion(0)">
+        What part of Melb?<span class="q-cost free">FREE</span>
+      </button>
+      <button class="q-btn" id="qbtn-1" onclick="askQuestion(1)">
+        N–S or E–W?<span class="q-cost">−500 pts</span>
+      </button>
+      <button class="q-btn" id="qbtn-2" onclick="openRoadPicker()">
+        N/S/E/W of a road?<span class="q-cost">−100 pts</span>
+      </button>
+      <button class="q-btn" id="qbtn-3" onclick="openSuburbPicker()">
+        In a suburb?<span class="q-cost">−250 pts</span>
+      </button>
+      <button class="q-btn" id="qbtn-4" onclick="askQuestion(4)" style="grid-column:span 2">
+        Inside the M3?<span class="q-cost">−250 pts</span>
+      </button>
+    </div>
+    <div class="answer-log" id="answer-log"></div>
+    <div class="guess-section">
+      <div class="q-section">Make your guess</div>
+      <div class="guess-row">
+        <input class="guess-input" id="guess-input" type="text" placeholder="Street name… e.g. Swanston St" autocomplete="off" oninput="onGuessInput()"/>
+        <button class="guess-submit" id="guess-submit" onclick="submitGuess()">GUESS</button>
+      </div>
+      <div class="ac-list" id="ac-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ROAD PICKER ═══ -->
+<div id="road-picker">
+  <div class="rp-sheet">
+    <div class="rp-title">Which road to compare?</div>
+    <input class="rp-search" id="rp-search" type="text" placeholder="Search roads… e.g. Hoddle, Bell" oninput="filterRoadList()"/>
+    <div class="rp-list" id="rp-list"></div>
+    <button class="rp-cancel" onclick="closeRoadPicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══ SUBURB PICKER ═══ -->
+<div id="suburb-picker">
+  <div class="rp-sheet">
+    <div class="rp-title">Which suburb?</div>
+    <input class="rp-search" id="sp-search" type="text" placeholder="Search suburb… e.g. Richmond, Fitzroy" oninput="filterSuburbList()"/>
+    <div class="rp-list" id="sp-list"></div>
+    <button class="rp-cancel" onclick="closeSuburbPicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══ RESULT ═══ -->
+<div id="screen-result" class="screen">
+  <div class="result-inner">
+    <div class="result-verdict" id="result-verdict">CORRECT!</div>
+    <div class="result-street" id="result-street">The street was <strong>Swanston Street</strong></div>
+    <div class="result-map-wrap"><div id="result-map"></div></div>
+    <div class="result-box">
+      <div class="result-pts" id="result-pts">7,350</div>
+      <div class="result-pts-lbl">Points this round</div>
+      <div class="result-hi" id="result-hi"></div>
+    </div>
+    <div class="result-actions">
+      <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
+      <button class="btn-ghost" onclick="showScreen('leaderboard')">Leaderboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// STREET DATA — every major road in the Melbourne metro area
+// Fields: name, lat, lng (centrepoint), orientation NS/EW/DIAG,
+//         region, insideM3, suburbs[]
+// ══════════════════════════════════════════════════════════
+const STREETS = [
+  // ── CBD & INNER ──
+  {name:"Swanston Street",lat:-37.8136,lng:144.9631,o:"NS",region:"inner",m3:true,s:["CBD","Carlton","Parkville","Melbourne"]},
+  {name:"Elizabeth Street",lat:-37.8143,lng:144.9576,o:"NS",region:"inner",m3:true,s:["CBD","Flemington","North Melbourne","Melbourne"]},
+  {name:"Spencer Street",lat:-37.8178,lng:144.9523,o:"NS",region:"inner",m3:true,s:["CBD","West Melbourne","Docklands","Melbourne"]},
+  {name:"King Street",lat:-37.8160,lng:144.9551,o:"NS",region:"inner",m3:true,s:["CBD","West Melbourne","Melbourne"]},
+  {name:"William Street",lat:-37.8154,lng:144.9563,o:"NS",region:"inner",m3:true,s:["CBD","Melbourne"]},
+  {name:"Collins Street",lat:-37.8159,lng:144.9665,o:"EW",region:"inner",m3:true,s:["CBD","East Melbourne","Melbourne"]},
+  {name:"Bourke Street",lat:-37.8144,lng:144.9634,o:"EW",region:"inner",m3:true,s:["CBD","Docklands","Melbourne"]},
+  {name:"Flinders Street",lat:-37.8183,lng:144.9671,o:"EW",region:"inner",m3:true,s:["CBD","Melbourne"]},
+  {name:"Latrobe Street",lat:-37.8101,lng:144.9603,o:"EW",region:"inner",m3:true,s:["CBD","North Melbourne","Melbourne"]},
+  {name:"Victoria Street",lat:-37.8079,lng:144.9790,o:"EW",region:"inner",m3:true,s:["Carlton","North Melbourne","Richmond","Collingwood","Abbotsford"]},
+
+  // ── INNER NORTH ──
+  {name:"Brunswick Street",lat:-37.7987,lng:144.9779,o:"NS",region:"inner north",m3:true,s:["Fitzroy","Fitzroy North"]},
+  {name:"Smith Street",lat:-37.8017,lng:144.9843,o:"NS",region:"inner north",m3:true,s:["Fitzroy","Collingwood"]},
+  {name:"Johnston Street",lat:-37.8033,lng:144.9838,o:"EW",region:"inner north",m3:true,s:["Fitzroy","Collingwood","Abbotsford"]},
+  {name:"Royal Parade",lat:-37.7882,lng:144.9591,o:"NS",region:"inner north",m3:true,s:["Parkville","Carlton North"]},
+  {name:"Flemington Road",lat:-37.7942,lng:144.9443,o:"EW",region:"inner north",m3:true,s:["Parkville","North Melbourne","Flemington"]},
+  {name:"Lygon Street",lat:-37.7920,lng:144.9666,o:"NS",region:"inner north",m3:true,s:["Carlton","Brunswick"]},
+  {name:"Sydney Road",lat:-37.7500,lng:144.9609,o:"NS",region:"north",m3:false,s:["Brunswick","Coburg","Fawkner","Moreland"]},
+  {name:"Nicholson Street",lat:-37.7930,lng:144.9790,o:"NS",region:"inner north",m3:true,s:["Carlton North","Fitzroy North","Fitzroy"]},
+  {name:"Rathdowne Street",lat:-37.7930,lng:144.9715,o:"NS",region:"inner north",m3:true,s:["Carlton","Carlton North"]},
+  {name:"Park Street",lat:-37.8030,lng:144.9680,o:"EW",region:"inner north",m3:true,s:["Carlton","Parkville"]},
+
+  // ── INNER EAST ──
+  {name:"Hoddle Street",lat:-37.8140,lng:144.9897,o:"NS",region:"inner east",m3:true,s:["Richmond","Collingwood","Abbotsford"]},
+  {name:"Punt Road",lat:-37.8372,lng:144.9899,o:"NS",region:"south east",m3:false,s:["Richmond","Prahran","Windsor","South Yarra"]},
+  {name:"Bridge Road",lat:-37.8187,lng:144.9893,o:"EW",region:"inner east",m3:false,s:["Richmond"]},
+  {name:"Swan Street",lat:-37.8238,lng:144.9920,o:"EW",region:"inner east",m3:false,s:["Richmond","Burnley"]},
+  {name:"Church Street Richmond",lat:-37.8218,lng:144.9988,o:"NS",region:"inner east",m3:false,s:["Richmond","Hawthorn"]},
+
+  // ── SOUTH / INNER SOUTH ──
+  {name:"St Kilda Road",lat:-37.8480,lng:144.9741,o:"NS",region:"south",m3:false,s:["Melbourne","South Yarra","St Kilda","Albert Park"]},
+  {name:"Chapel Street",lat:-37.8524,lng:144.9952,o:"NS",region:"south east",m3:false,s:["South Yarra","Prahran","Windsor"]},
+  {name:"Toorak Road",lat:-37.8413,lng:145.0162,o:"EW",region:"south east",m3:false,s:["South Yarra","Toorak","Camberwell"]},
+  {name:"Commercial Road",lat:-37.8479,lng:144.9930,o:"EW",region:"south east",m3:false,s:["Prahran","South Yarra"]},
+  {name:"High Street Prahran",lat:-37.8550,lng:145.0002,o:"EW",region:"south east",m3:false,s:["Prahran","Windsor","Armadale"]},
+  {name:"Dandenong Road",lat:-37.8774,lng:145.0302,o:"EW",region:"south east",m3:false,s:["Malvern East","Caulfield","Carnegie","Murrumbeena"]},
+  {name:"Alma Road",lat:-37.8640,lng:144.9940,o:"EW",region:"south east",m3:false,s:["St Kilda East","Caulfield North"]},
+  {name:"Glen Eira Road",lat:-37.8820,lng:144.9990,o:"NS",region:"south east",m3:false,s:["Ripponlea","Elsternwick","Caulfield North","Carnegie"]},
+  {name:"Inkerman Street",lat:-37.8620,lng:144.9890,o:"EW",region:"south",m3:false,s:["St Kilda","Elwood","St Kilda East"]},
+  {name:"Fitzroy Street St Kilda",lat:-37.8643,lng:144.9792,o:"NS",region:"south",m3:false,s:["St Kilda","St Kilda East"]},
+  {name:"Nepean Highway",lat:-37.9620,lng:145.0512,o:"NS",region:"south",m3:false,s:["Moorabbin","Cheltenham","Mentone","Frankston"]},
+  {name:"South Road Moorabbin",lat:-37.9265,lng:145.0500,o:"EW",region:"south",m3:false,s:["Moorabbin","Bentleigh East"]},
+  {name:"Centre Road",lat:-37.9093,lng:145.0330,o:"EW",region:"south",m3:false,s:["Bentleigh","East Bentleigh","Bentleigh East"]},
+
+  // ── NORTH ──
+  {name:"Bell Street",lat:-37.7347,lng:145.0312,o:"EW",region:"north",m3:false,s:["Coburg","Preston","Heidelberg West","Heidelberg"]},
+  {name:"High Street Thornbury",lat:-37.7583,lng:144.9992,o:"NS",region:"north",m3:false,s:["Northcote","Thornbury","Preston","Reservoir"]},
+  {name:"Murray Road Preston",lat:-37.7448,lng:145.0103,o:"EW",region:"north",m3:false,s:["Preston","Reservoir"]},
+  {name:"Plenty Road",lat:-37.7100,lng:145.0632,o:"NS",region:"north",m3:false,s:["Bundoora","Mill Park","South Morang","Plenty"]},
+  {name:"Mahoneys Road",lat:-37.7022,lng:145.0472,o:"EW",region:"north",m3:false,s:["Mill Park","Bundoora"]},
+  {name:"Dalton Road",lat:-37.6850,lng:145.0500,o:"EW",region:"north",m3:false,s:["Thomastown","Epping"]},
+  {name:"Epping Road",lat:-37.6700,lng:145.0220,o:"NS",region:"north",m3:false,s:["Epping","Lalor","Thomastown"]},
+  {name:"Cooper Street Epping",lat:-37.6450,lng:145.0120,o:"EW",region:"north",m3:false,s:["Epping","South Morang"]},
+  {name:"Mickleham Road",lat:-37.6500,lng:144.9140,o:"NS",region:"north",m3:false,s:["Tullamarine","Broadmeadows","Greenvale","Mickleham"]},
+  {name:"Camp Road",lat:-37.6850,lng:144.9140,o:"EW",region:"north",m3:false,s:["Broadmeadows","Dallas","Glenroy"]},
+  {name:"Pascoe Vale Road",lat:-37.7100,lng:144.9310,o:"NS",region:"north",m3:false,s:["Coburg North","Pascoe Vale","Glenroy","Hadfield"]},
+  {name:"Gaffney Street",lat:-37.7200,lng:144.9450,o:"EW",region:"north",m3:false,s:["Coburg","Coburg North","Pascoe Vale South"]},
+
+  // ── NORTH EAST ──
+  {name:"Heidelberg Road",lat:-37.7752,lng:145.0542,o:"EW",region:"north east",m3:false,s:["Fairfield","Ivanhoe","Heidelberg"]},
+  {name:"Lower Plenty Road",lat:-37.7522,lng:145.0872,o:"NS",region:"north east",m3:false,s:["Viewbank","Rosanna","Bulleen"]},
+  {name:"Fitzsimons Lane",lat:-37.7312,lng:145.1732,o:"NS",region:"north east",m3:false,s:["Templestowe","Eltham","Warrandyte"]},
+  {name:"Main Road Eltham",lat:-37.7140,lng:145.1490,o:"EW",region:"north east",m3:false,s:["Eltham","Diamond Creek","Hurstbridge"]},
+  {name:"Reynolds Road",lat:-37.7550,lng:145.1150,o:"EW",region:"north east",m3:false,s:["Doncaster East","Templestowe Lower"]},
+  {name:"Doncaster Road",lat:-37.7913,lng:145.1152,o:"EW",region:"east",m3:false,s:["Balwyn North","Doncaster","Templestowe Lower"]},
+  {name:"Manningham Road",lat:-37.7760,lng:145.1170,o:"EW",region:"north east",m3:false,s:["Bulleen","Doncaster"]},
+  {name:"Greensborough Road",lat:-37.7000,lng:145.1000,o:"NS",region:"north east",m3:false,s:["Greensborough","Watsonia","Rosanna"]},
+  {name:"Diamond Creek Road",lat:-37.6800,lng:145.1400,o:"NS",region:"north east",m3:false,s:["Diamond Creek","Eltham","Doreen"]},
+
+  // ── EAST ──
+  {name:"Whitehorse Road",lat:-37.8149,lng:145.0892,o:"EW",region:"east",m3:false,s:["Balwyn","Box Hill","Nunawading","Mitcham"]},
+  {name:"Canterbury Road",lat:-37.8213,lng:145.0752,o:"EW",region:"east",m3:false,s:["Surrey Hills","Canterbury","Balwyn","Box Hill South"]},
+  {name:"Burke Road",lat:-37.8463,lng:145.0672,o:"NS",region:"east",m3:false,s:["Camberwell","Glen Iris","Canterbury","Hawthorn East"]},
+  {name:"High Street Kew",lat:-37.8213,lng:145.0432,o:"EW",region:"east",m3:false,s:["Kew","Kew East","Hawthorn East"]},
+  {name:"Glenferrie Road",lat:-37.8213,lng:145.0342,o:"NS",region:"east",m3:false,s:["Hawthorn","Malvern","Kooyong"]},
+  {name:"Maroondah Highway",lat:-37.8138,lng:145.2192,o:"EW",region:"east",m3:false,s:["Ringwood","Croydon","Bayswater","Mooroolbark"]},
+  {name:"Dorset Road",lat:-37.8390,lng:145.2370,o:"NS",region:"east",m3:false,s:["Boronia","Bayswater","Ferntree Gully"]},
+  {name:"Mountain Highway",lat:-37.8560,lng:145.2450,o:"EW",region:"east",m3:false,s:["Wantirna","Knox City","Ferntree Gully"]},
+  {name:"Stud Road",lat:-37.8972,lng:145.2422,o:"NS",region:"east",m3:false,s:["Rowville","Knoxfield","Bayswater"]},
+  {name:"Ferntree Gully Road",lat:-37.8620,lng:145.2010,o:"EW",region:"east",m3:false,s:["Scoresby","Ferntree Gully","Knoxfield","Wantirna South"]},
+
+  // ── SOUTH EAST ──
+  {name:"High Street Armadale",lat:-37.8543,lng:145.0132,o:"EW",region:"south east",m3:false,s:["Armadale","Malvern","Glen Iris","Ashburton"]},
+  {name:"Warrigal Road",lat:-37.9013,lng:145.0822,o:"NS",region:"south east",m3:false,s:["Malvern East","Oakleigh","Moorabbin","Cheltenham"]},
+  {name:"Springvale Road",lat:-37.9388,lng:145.1502,o:"NS",region:"south east",m3:false,s:["Springvale","Mulgrave","Glen Waverley","Dingley Village"]},
+  {name:"Princes Highway",lat:-37.9872,lng:145.1622,o:"EW",region:"south east",m3:false,s:["Dandenong","Noble Park","Springvale","Hallam"]},
+  {name:"Frankston-Dandenong Road",lat:-37.9972,lng:145.2102,o:"NS",region:"south east",m3:false,s:["Dandenong","Keysborough","Springvale","Hallam"]},
+  {name:"Clayton Road",lat:-37.9180,lng:145.1220,o:"EW",region:"south east",m3:false,s:["Clayton","Clayton South","Clarinda"]},
+  {name:"Wellington Road",lat:-37.9030,lng:145.1590,o:"NS",region:"south east",m3:false,s:["Mulgrave","Rowville","Noble Park North"]},
+  {name:"Princes Freeway",lat:-37.9380,lng:145.3100,o:"EW",region:"south east",m3:false,s:["Dandenong South","Hallam","Narre Warren"]},
+  {name:"Narre Warren-Cranbourne Road",lat:-38.0200,lng:145.3100,o:"NS",region:"south east",m3:false,s:["Narre Warren","Cranbourne","Cranbourne North"]},
+  {name:"Cranbourne Road",lat:-38.0600,lng:145.2700,o:"EW",region:"south east",m3:false,s:["Cranbourne","Cranbourne East","Botanic Ridge"]},
+
+  // ── WEST ──
+  {name:"Footscray Road",lat:-37.8049,lng:144.9193,o:"EW",region:"west",m3:false,s:["West Melbourne","Footscray","Docklands"]},
+  {name:"Geelong Road",lat:-37.7992,lng:144.8012,o:"EW",region:"west",m3:false,s:["Footscray","Sunshine","Deer Park","Ardeer"]},
+  {name:"Ballarat Road",lat:-37.7772,lng:144.7892,o:"EW",region:"west",m3:false,s:["Sunshine","St Albans","Deer Park","Cairnlea"]},
+  {name:"Western Ring Road",lat:-37.8192,lng:144.8172,o:"NS",region:"west",m3:false,s:["Laverton North","Altona North","Sunshine North","Tottenham"]},
+  {name:"Sunshine Road",lat:-37.7950,lng:144.8350,o:"EW",region:"west",m3:false,s:["Sunshine","Sunshine West","Braybrook"]},
+  {name:"Williamstown Road",lat:-37.8430,lng:144.8680,o:"EW",region:"west",m3:false,s:["Seddon","Kingsville","Newport","Williamstown"]},
+  {name:"Melbourne Road Williamstown",lat:-37.8580,lng:144.8890,o:"NS",region:"west",m3:false,s:["Williamstown","Newport","Altona"]},
+  {name:"Millers Road",lat:-37.7950,lng:144.8750,o:"NS",region:"west",m3:false,s:["Altona North","Brooklyn","Laverton North"]},
+  {name:"Kororoit Creek Road",lat:-37.7700,lng:144.8150,o:"EW",region:"west",m3:false,s:["Sunshine","Taylors Lakes","Keilor Downs","Derrimut"]},
+  {name:"Sydenham Road",lat:-37.7280,lng:144.7670,o:"NS",region:"west",m3:false,s:["Sydenham","Taylors Lakes","Keilor"]},
+  {name:"Melton Highway",lat:-37.7050,lng:144.7870,o:"EW",region:"west",m3:false,s:["Sydenham","Watergardens","Taylors Hill","Melton East"]},
+  {name:"Western Highway",lat:-37.7830,lng:144.6900,o:"EW",region:"west",m3:false,s:["Deer Park","Caroline Springs","Rockbank","Melton"]},
+  {name:"Old Calder Highway",lat:-37.6980,lng:144.8230,o:"NS",region:"west",m3:false,s:["Keilor","Tullamarine","Bulla"]},
+
+  // ── MIXED / ARTERIALS ──
+  {name:"Boundary Road",lat:-37.8490,lng:144.9200,o:"NS",region:"west",m3:false,s:["Maribyrnong","Maidstone","Sunshine North"]},
+  {name:"Racecourse Road",lat:-37.7893,lng:144.9410,o:"EW",region:"inner north",m3:true,s:["Flemington","North Melbourne"]},
+  {name:"Mt Alexander Road",lat:-37.7630,lng:144.9410,o:"NS",region:"north",m3:false,s:["Flemington","Moonee Ponds","Essendon","Aberfeldie"]},
+  {name:"Keilor Road",lat:-37.7500,lng:144.8890,o:"NS",region:"north",m3:false,s:["Essendon North","Keilor East","Niddrie"]},
+  {name:"Tucker Road",lat:-37.9000,lng:145.0230,o:"EW",region:"south",m3:false,s:["Bentleigh East","Ormond"]},
+  {name:"North Road",lat:-37.8830,lng:145.0100,o:"EW",region:"south",m3:false,s:["Brighton East","Ormond","Bentleigh"]},
+  {name:"Bay Street Port Melbourne",lat:-37.8360,lng:144.9440,o:"NS",region:"south",m3:false,s:["Port Melbourne","South Melbourne"]},
+  {name:"Beaconsfield Parade",lat:-37.8580,lng:144.9540,o:"EW",region:"south",m3:false,s:["Port Melbourne","St Kilda","Elwood","Albert Park"]},
+  {name:"Hawthorn Road",lat:-37.8730,lng:145.0060,o:"NS",region:"south east",m3:false,s:["Caulfield North","Caulfield South","Malvern East"]},
+  {name:"Balaclava Road",lat:-37.8680,lng:144.9940,o:"EW",region:"south",m3:false,s:["Balaclava","St Kilda East","Caulfield North"]},
+  {name:"Boronia Road",lat:-37.8590,lng:145.2330,o:"EW",region:"east",m3:false,s:["Boronia","Ferntree Gully","Upper Ferntree Gully"]},
+];
+
+// All unique suburb names for the suburb picker
+const ALL_SUBURBS = [...new Set(STREETS.flatMap(s=>s.s))].sort();
+
+// All street names usable as reference roads in Q2 (same list, for simplicity)
+const ALL_REF_ROADS = STREETS.map(s=>s.name).sort();
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let currentStreet=null,currentScore=10000,usedQ=new Set();
+let currentUser=null,gameMap=null,resultMap=null;
+let roadPickerCallback=null;
+
+// ══════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════
+const getUsers=()=>JSON.parse(localStorage.getItem('msg_users')||'{}');
+const saveUsers=u=>localStorage.setItem('msg_users',JSON.stringify(u));
+const getLB=()=>JSON.parse(localStorage.getItem('msg_lb')||'[]');
+const saveLB=lb=>localStorage.setItem('msg_lb',JSON.stringify(lb));
+
+function updateHiScore(username,score){
+  if(!username||username==='Guest') return false;
+  const lb=getLB(),idx=lb.findIndex(r=>r.name===username);
+  let isNew=false;
+  if(idx===-1){lb.push({name:username,best:score,games:1});isNew=true;}
+  else{lb[idx].games++;if(score>lb[idx].best){lb[idx].best=score;isNew=true;}}
+  lb.sort((a,b)=>b.best-a.best);
+  saveLB(lb);
+  return isNew;
+}
+
+// ══════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));
+  document.getElementById('panel-login').classList.toggle('active',t==='login');
+  document.getElementById('panel-register').classList.toggle('active',t==='register');
+}
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim(),p=document.getElementById('login-pass').value,msg=document.getElementById('login-msg'),users=getUsers();
+  if(!u||!p){msg.textContent='Please fill in all fields.';return;}
+  if(!users[u]||users[u].pw!==btoa(p)){msg.textContent='Incorrect username or password.';return;}
+  msg.textContent='';currentUser=u;startGame();
+}
+function doRegister(){
+  const u=document.getElementById('reg-user').value.trim(),p=document.getElementById('reg-pass').value,p2=document.getElementById('reg-pass2').value,msg=document.getElementById('reg-msg');
+  if(!u||!p){msg.textContent='Please fill in all fields.';return;}
+  if(p!==p2){msg.textContent='Passwords do not match.';return;}
+  if(u.length<3){msg.textContent='Username must be at least 3 characters.';return;}
+  const users=getUsers();
+  if(users[u]){msg.textContent='Username already taken.';return;}
+  users[u]={pw:btoa(p)};saveUsers(users);
+  msg.style.color='#4A9B8E';msg.textContent='Account created! Logging in…';
+  currentUser=u;setTimeout(()=>{msg.style.color='';startGame();},700);
+}
+function playAsGuest(){currentUser='Guest';startGame();}
+
+// ══════════════════════════════════════
+// SCREENS
+// ══════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(id==='leaderboard') renderLB();
+}
+
+// ══════════════════════════════════════
+// LEADERBOARD
+// ══════════════════════════════════════
+function renderLB(){
+  const lb=getLB(),el=document.getElementById('lb-list');
+  if(!lb.length){el.innerHTML='<div class="lb-empty">No scores yet — be the first!</div>';return;}
+  const m=['gold','silver','bronze'];
+  el.innerHTML=lb.slice(0,15).map((r,i)=>`
+    <div class="lb-row ${m[i]||''}">
+      <div class="lb-rank">#${i+1}</div>
+      <div class="lb-name">${r.name}</div>
+      <div class="lb-score">${r.best.toLocaleString()}</div>
+      <div class="lb-games">${r.games}g</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════
+// GAME START
+// ══════════════════════════════════════
+function startGame(){
+  currentStreet=STREETS[Math.floor(Math.random()*STREETS.length)];
+  currentScore=10000;usedQ=new Set();
+
+  document.getElementById('hdr-player').textContent=currentUser||'Guest';
+  updateScore();
+  document.querySelectorAll('.q-btn').forEach(b=>{b.disabled=false;b.classList.remove('used');});
+  document.getElementById('answer-log').innerHTML='';
+  document.getElementById('map-hints').innerHTML='';
+  document.getElementById('guess-input').value='';
+  document.getElementById('ac-list').innerHTML='';
+  document.getElementById('ac-list').classList.remove('open');
+  document.getElementById('guess-submit').disabled=false;
+
+  showScreen('game');
+
+  // Destroy old map first, then init fresh after screen is visible
+  if(gameMap){gameMap.remove();gameMap=null;}
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      gameMap=L.map('game-map',{zoomControl:false}).setView([-37.8136,144.9631],11);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:18
+      }).addTo(gameMap);
+      L.control.zoom({position:'bottomleft'}).addTo(gameMap);
+      // Q1 is free — answer it immediately
+      askQuestion(0);
+    });
+  });
+}
+
+function updateScore(){
+  document.getElementById('score-display').textContent=currentScore.toLocaleString();
+  document.getElementById('score-fill').style.width=Math.max(0,currentScore/100)+'%';
+}
+
+// ══════════════════════════════════════
+// QUESTIONS
+// ══════════════════════════════════════
+const Q_COST=[0,500,100,250,250];
+const Q_LABEL=["Part of Melbourne","N–S or E–W","N/S/E/W of a road","In a suburb","Inside the M3"];
+
+function askQuestion(idx){
+  if(idx===2){openRoadPicker();return;}
+  if(idx===3){openSuburbPicker();return;}
+  if(usedQ.has(idx)) return;
+  usedQ.add(idx);
+  const cost=Q_COST[idx];
+  if(cost>0){currentScore=Math.max(0,currentScore-cost);updateScore();flashPenalty();}
+  document.getElementById('qbtn-'+idx).disabled=true;
+  document.getElementById('qbtn-'+idx).classList.add('used');
+  const ans=getAnswer(idx,null);
+  addAnswer(`<strong>${Q_LABEL[idx]}:</strong> ${ans}`);
+  addHint(`${Q_LABEL[idx]}: ${ans}`);
+}
+
+function getAnswer(idx,param){
+  const s=currentStreet;
+  if(idx===0) return cap(s.region);
+  if(idx===1) return s.o==='NS'?'Primarily North–South':'Primarily East–West';
+  if(idx===2) return answerDirectional(param);
+  if(idx===3){
+    const hit=s.s.find(x=>x.toLowerCase()===param?.toLowerCase());
+    return hit?`Yes, it passes through ${hit}`:`No, it does not pass through ${param}`;
+  }
+  if(idx===4) return s.m3?'Yes — inside / east of the M3 ring':'No — outside the M3 ring';
+}
+
+function answerDirectional(refName){
+  if(!refName) return 'No road selected.';
+  const s=currentStreet;
+  const ref=STREETS.find(r=>r.name.toLowerCase()===refName.toLowerCase());
+  if(!ref) return `Cannot find "${refName}" in the database.`;
+  const latDiff=Math.abs(s.lat-ref.lat),lngDiff=Math.abs(s.lng-ref.lng);
+  const ns=s.lat<ref.lat?'North':'South';
+  const ew=s.lng<ref.lng?'West':'East';
+  // if very close on one axis, say predominantly one direction
+  if(latDiff<0.003) return `Roughly the same latitude as ${refName}, but slightly ${ew}`;
+  if(lngDiff<0.005) return `Roughly the same longitude as ${refName}, but slightly ${ns}`;
+  return `It is <strong>${ns}</strong> and <strong>${ew}</strong> of ${refName}`;
+}
+
+// ── ROAD PICKER (for Q2) ──
+function openRoadPicker(){
+  document.getElementById('rp-search').value='';
+  filterRoadList();
+  document.getElementById('road-picker').classList.add('open');
+}
+function closeRoadPicker(){document.getElementById('road-picker').classList.remove('open');}
+function filterRoadList(){
+  const q=document.getElementById('rp-search').value.toLowerCase();
+  const filtered=ALL_REF_ROADS.filter(r=>r.toLowerCase().includes(q)&&r.toLowerCase()!==currentStreet.name.toLowerCase());
+  document.getElementById('rp-list').innerHTML=filtered.map(r=>`<div class="rp-item" onclick="pickRoad('${r.replace(/'/g,"\\'")}')">📍 ${r}</div>`).join('');
+}
+function pickRoad(name){
+  closeRoadPicker();
+  // deduct cost, can ask multiple times
+  currentScore=Math.max(0,currentScore-Q_COST[2]);
+  updateScore();flashPenalty();
+  const ans=getAnswer(2,name);
+  addAnswer(`<strong>N/S/E/W of ${name}:</strong> ${ans}`);
+  addHint(`vs ${name}: ${ans.replace(/<[^>]+>/g,'')}`);
+}
+
+// ── SUBURB PICKER (for Q3) ──
+function openSuburbPicker(){
+  document.getElementById('sp-search').value='';
+  filterSuburbList();
+  document.getElementById('suburb-picker').classList.add('open');
+}
+function closeSuburbPicker(){document.getElementById('suburb-picker').classList.remove('open');}
+function filterSuburbList(){
+  const q=document.getElementById('sp-search').value.toLowerCase();
+  const filtered=ALL_SUBURBS.filter(s=>s.toLowerCase().includes(q));
+  document.getElementById('sp-list').innerHTML=filtered.map(s=>`<div class="rp-item" onclick="pickSuburb('${s.replace(/'/g,"\\'")}')">🏘 ${s}</div>`).join('');
+}
+function pickSuburb(name){
+  closeSuburbPicker();
+  currentScore=Math.max(0,currentScore-Q_COST[3]);
+  updateScore();flashPenalty();
+  const ans=getAnswer(3,name);
+  addAnswer(`<strong>Suburb — ${name}:</strong> ${ans}`);
+  addHint(`${name}: ${ans.length>40?ans.slice(0,38)+'…':ans}`);
+}
+
+function addAnswer(html){
+  const log=document.getElementById('answer-log');
+  const b=document.createElement('div');
+  b.className='answer-bubble';b.innerHTML=html;
+  log.appendChild(b);
+  b.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function addHint(text){
+  const c=document.getElementById('map-hints');
+  const ch=document.createElement('div');
+  ch.className='hint-chip';
+  ch.textContent=text.length>48?text.slice(0,45)+'…':text;
+  c.appendChild(ch);
+  while(c.children.length>4)c.removeChild(c.firstChild);
+}
+function flashPenalty(){
+  const el=document.getElementById('score-display');
+  el.classList.add('penalty');setTimeout(()=>el.classList.remove('penalty'),600);
+}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):s;}
+
+// ══════════════════════════════════════
+// GUESS
+// ══════════════════════════════════════
+function onGuessInput(){
+  const val=document.getElementById('guess-input').value.toLowerCase().trim();
+  const list=document.getElementById('ac-list');
+  if(val.length<2){list.classList.remove('open');return;}
+  const matches=STREETS.filter(s=>s.name.toLowerCase().includes(val)).slice(0,8);
+  if(!matches.length){list.classList.remove('open');return;}
+  list.innerHTML=matches.map(s=>`<div class="ac-item" onclick="selectGuess('${s.name.replace(/'/g,"\\'")}')">📍 ${s.name}</div>`).join('');
+  list.classList.add('open');
+}
+function selectGuess(name){
+  document.getElementById('guess-input').value=name;
+  document.getElementById('ac-list').classList.remove('open');
+}
+function submitGuess(){
+  const guess=document.getElementById('guess-input').value.trim();
+  if(!guess)return;
+  document.getElementById('ac-list').classList.remove('open');
+  document.getElementById('guess-submit').disabled=true;
+  const correct=guess.toLowerCase()===currentStreet.name.toLowerCase();
+  const pts=correct?currentScore:0;
+  const isNew=updateHiScore(currentUser,pts);
+  document.getElementById('result-verdict').textContent=correct?'CORRECT!':'WRONG!';
+  document.getElementById('result-verdict').className='result-verdict '+(correct?'win':'lose');
+  document.getElementById('result-street').innerHTML=`The street was <strong>${currentStreet.name}</strong>`;
+  document.getElementById('result-pts').textContent=pts.toLocaleString();
+  const lb=getLB(),rec=lb.find(r=>r.name===(currentUser||'Guest'));
+  let hi='';
+  if(currentUser&&currentUser!=='Guest'){
+    hi=`Your best: ${(rec?.best||0).toLocaleString()} pts`;
+    if(isNew&&correct)hi+=' <span class="new-badge">NEW BEST</span>';
+  }
+  document.getElementById('result-hi').innerHTML=hi;
+  showScreen('result');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(resultMap){resultMap.remove();resultMap=null;}
+    resultMap=L.map('result-map',{zoomControl:false,dragging:false,scrollWheelZoom:false})
+      .setView([currentStreet.lat,currentStreet.lng],13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© OpenStreetMap contributors',maxZoom:18
+    }).addTo(resultMap);
+    L.circleMarker([currentStreet.lat,currentStreet.lng],{
+      radius:11,fillColor:'#FFD54F',color:'#0B1F3A',weight:2.5,fillOpacity:.92
+    }).addTo(resultMap).bindPopup(`<strong>${currentStreet.name}</strong>`).openPopup();
+  }));
+}
+</script>
+</body>
+</html>
