@@ -2,22 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Melbourne Street Guesser</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-:root{--navy:#0B1F3A;--yellow:#FFD54F;--teal:#4A9B8E;--offwhite:#F0EDE8;--red:#D94F3D;--nl:#162D52;--nm:#1E3A5F;--muted:#8BA3C0}
+:root{
+  --navy:#0B1F3A;--yellow:#FFD54F;--teal:#4A9B8E;
+  --offwhite:#F0EDE8;--red:#D94F3D;--nl:#162D52;--nm:#1E3A5F;--muted:#8BA3C0;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);color:var(--offwhite);overflow-x:hidden}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);color:var(--offwhite);overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 
-/* SCREENS */
-.screen{display:none;min-height:100vh;flex-direction:column}
+/* ── SCREENS ── */
+.screen{display:none;height:100vh;height:100dvh;flex-direction:column}
 .screen.active{display:flex}
 
-/* LANDING */
-#screen-landing{align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse at 30% 40%,#162D52 0%,var(--navy) 70%)}
+/* ── LANDING ── */
+#screen-landing{align-items:center;justify-content:center;padding:2rem;overflow-y:auto;background:radial-gradient(ellipse at 30% 40%,#162D52 0%,var(--navy) 70%)}
 .landing-inner{max-width:400px;width:100%;text-align:center}
 .tram-icon{font-size:2.8rem;margin-bottom:.3rem}
 .landing-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,12vw,5rem);line-height:1;color:var(--yellow);letter-spacing:2px;margin-bottom:.2rem}
@@ -27,17 +32,17 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
 .tab-btn.active{background:var(--nm);color:var(--offwhite)}
 .auth-panel{display:none}.auth-panel.active{display:block}
 .fl{text-align:left;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem}
-.fi{width:100%;padding:.65rem .9rem;background:var(--nl);border:1.5px solid var(--nm);border-radius:6px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.92rem;outline:none;margin-bottom:.9rem;transition:border-color .2s}
+.fi{width:100%;padding:.65rem .9rem;background:var(--nl);border:1.5px solid var(--nm);border-radius:6px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:1rem;outline:none;margin-bottom:.9rem;transition:border-color .2s}
 .fi:focus{border-color:var(--teal)}
-.btn-primary{width:100%;padding:.8rem;background:var(--yellow);color:var(--navy);border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:1.5px;cursor:pointer;transition:opacity .2s,transform .1s}
-.btn-primary:hover{opacity:.9}.btn-primary:active{transform:scale(.98)}
+.btn-primary{width:100%;padding:.8rem;background:var(--yellow);color:var(--navy);border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:1.5px;cursor:pointer;transition:opacity .2s}
+.btn-primary:active{opacity:.8}
 .auth-msg{font-size:.8rem;color:var(--red);margin-top:.4rem;min-height:1.1em}
 .divider{color:var(--muted);font-size:.78rem;margin:.9rem 0}
 .btn-ghost{width:100%;padding:.65rem;background:transparent;border:1.5px solid var(--nm);border-radius:6px;color:var(--muted);font-family:'Inter',sans-serif;font-size:.88rem;cursor:pointer;transition:border-color .2s,color .2s;margin-bottom:.5rem}
-.btn-ghost:hover{border-color:var(--teal);color:var(--offwhite)}
+.btn-ghost:active{border-color:var(--teal);color:var(--offwhite)}
 
-/* LEADERBOARD */
-#screen-leaderboard{padding:2rem;align-items:center;background:radial-gradient(ellipse at 70% 20%,#162D52,var(--navy))}
+/* ── LEADERBOARD ── */
+#screen-leaderboard{overflow-y:auto;background:radial-gradient(ellipse at 70% 20%,#162D52,var(--navy));align-items:center;padding:2rem}
 .lb-inner{max-width:400px;width:100%}
 .lb-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--yellow);letter-spacing:2px;margin-bottom:.2rem}
 .lb-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.25rem}
@@ -48,80 +53,116 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
 .lb-score{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--yellow)}
 .lb-games{font-size:.72rem;color:var(--muted);margin-left:.4rem}
 .lb-empty{text-align:center;color:var(--muted);padding:2rem 0;font-size:.88rem}
-.back-btn{display:inline-flex;align-items:center;gap:.4rem;background:transparent;border:1.5px solid var(--nm);color:var(--muted);padding:.45rem .9rem;border-radius:6px;font-family:'Inter',sans-serif;font-size:.82rem;cursor:pointer;margin-bottom:1.25rem;transition:all .2s}
-.back-btn:hover{border-color:var(--teal);color:var(--offwhite)}
+.back-btn{display:inline-flex;align-items:center;gap:.4rem;background:transparent;border:1.5px solid var(--nm);color:var(--muted);padding:.45rem .9rem;border-radius:6px;font-family:'Inter',sans-serif;font-size:.82rem;cursor:pointer;margin-bottom:1.25rem}
 
-/* GAME */
-#screen-game{height:100vh;overflow:hidden}
-.game-header{background:var(--nl);padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--nm);flex-shrink:0}
-.game-logo{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;color:var(--yellow);letter-spacing:1px}
-.player-chip{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:.3rem}
-.player-chip span{color:var(--offwhite);font-weight:600}
+/* ── GAME ── */
+#screen-game{position:relative}
+#game-map{position:absolute;inset:0;z-index:1}
 
-.score-rail{background:var(--nl);padding:.6rem 1rem .8rem;border-bottom:1px solid var(--nm);flex-shrink:0}
-.score-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.35rem}
-.score-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
-.score-value{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;color:var(--yellow);line-height:1;transition:color .3s}
-.score-value.penalty{color:var(--red)}
-.score-track{height:5px;background:var(--nm);border-radius:3px;overflow:hidden}
-.score-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--yellow));border-radius:3px;transition:width .5s ease}
+/* Floating header */
+.game-header{
+  position:absolute;top:0;left:0;right:0;z-index:500;
+  background:rgba(11,31,58,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:.55rem 1rem;padding-top:calc(.55rem + var(--safe-top));
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(30,58,95,.8);
+}
+.game-logo{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--yellow);letter-spacing:1px}
+.score-pill{display:flex;align-items:center;gap:.6rem}
+.score-num{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--yellow);line-height:1;transition:color .3s;min-width:4rem;text-align:right}
+.score-num.penalty{color:var(--red)}
+.score-bar-wrap{width:48px;height:4px;background:var(--nm);border-radius:2px;overflow:hidden}
+.score-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--yellow));border-radius:2px;transition:width .5s ease}
+.player-chip{font-size:.7rem;color:var(--muted);line-height:1.5}
+.player-chip span{color:var(--offwhite);font-weight:600;display:block}
 
-/* MAP — fixed height so Leaflet can measure it */
-#map-wrap{height:220px;flex-shrink:0;position:relative}
-#game-map{width:100%;height:100%}
-.map-hints{position:absolute;bottom:.5rem;left:.5rem;right:.5rem;z-index:800;display:flex;flex-wrap:wrap;gap:.3rem;pointer-events:none}
-.hint-chip{background:rgba(11,31,58,.88);border:1px solid var(--teal);border-radius:12px;padding:.22rem .6rem;font-size:.72rem;color:var(--teal);backdrop-filter:blur(4px)}
+/* Hint chips float above the panel */
+.map-hints{
+  position:absolute;left:.6rem;right:.6rem;z-index:400;
+  display:flex;flex-wrap:wrap;gap:.3rem;pointer-events:none;
+}
+.hint-chip{background:rgba(11,31,58,.92);border:1px solid var(--teal);border-radius:12px;padding:.22rem .65rem;font-size:.7rem;color:var(--teal);backdrop-filter:blur(4px)}
 
-/* QUESTION PANEL — scrollable */
-.q-panel{flex:1;overflow-y:auto;padding:.75rem 1rem;background:var(--navy)}
-.q-section{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.6rem}
-.q-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.65rem}
-.q-btn{padding:.6rem .7rem;background:var(--nl);border:1.5px solid var(--nm);border-radius:8px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.78rem;cursor:pointer;text-align:left;line-height:1.3;transition:all .2s}
-.q-btn:hover:not(:disabled){border-color:var(--teal);background:var(--nm)}
-.q-btn:disabled,.q-btn.used{opacity:.35;cursor:not-allowed}
-.q-cost{display:block;font-family:'Bebas Neue',sans-serif;font-size:.82rem;color:var(--red);margin-top:.18rem}
+/* Tap instruction */
+#tap-hint{
+  position:absolute;bottom:12rem;left:50%;transform:translateX(-50%);z-index:450;
+  background:rgba(11,31,58,.93);border:1.5px solid var(--yellow);border-radius:20px;
+  padding:.4rem 1.1rem;font-size:.8rem;color:var(--yellow);white-space:nowrap;
+  pointer-events:none;backdrop-filter:blur(6px);
+  animation:pulseHint 2s ease-in-out infinite;
+}
+@keyframes pulseHint{0%,100%{opacity:.8}50%{opacity:1}}
+
+/* Loading spinner on map */
+#map-loading{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:600;background:rgba(11,31,58,.9);border-radius:12px;
+  padding:.6rem 1.1rem;font-size:.82rem;color:var(--muted);
+  display:none;pointer-events:none;backdrop-filter:blur(6px);
+}
+
+/* ── SLIDE-UP PANEL ── */
+#game-panel{
+  position:absolute;left:0;right:0;bottom:0;z-index:300;
+  background:var(--navy);border-radius:18px 18px 0 0;
+  box-shadow:0 -4px 24px rgba(0,0,0,.5);
+  display:flex;flex-direction:column;
+  will-change:height;
+}
+.panel-handle{flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:.7rem 0 .4rem;cursor:grab;touch-action:none;user-select:none}
+.panel-handle-bar{width:36px;height:4px;background:var(--nm);border-radius:2px}
+.panel-tabs{flex-shrink:0;display:flex;border-bottom:1px solid var(--nm);padding:0 1rem;gap:.5rem}
+.panel-tab{padding:.5rem .1rem .45rem;font-size:.73rem;font-weight:600;color:var(--muted);border:none;background:transparent;border-bottom:2px solid transparent;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;margin-bottom:-1px;transition:color .2s}
+.panel-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
+.panel-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.75rem 1rem;padding-bottom:calc(.75rem + var(--safe-bottom))}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* Info questions (about the SECRET road) */
+.info-q-section{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.55rem;margin-top:.3rem}
+.info-q-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.65rem}
+.info-q-btn{padding:.65rem .7rem;background:var(--nl);border:1.5px solid var(--nm);border-radius:10px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.8rem;cursor:pointer;text-align:left;line-height:1.3}
+.info-q-btn:active:not(:disabled){background:var(--nm);border-color:var(--teal)}
+.info-q-btn:disabled{opacity:.3;cursor:not-allowed}
+.q-cost{display:block;font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--red);margin-top:.15rem}
 .q-cost.free{color:var(--teal)}
 
-/* ANSWER LOG */
-.answer-log{margin-bottom:.65rem;display:flex;flex-direction:column;gap:.4rem}
+/* Answer bubbles */
+.answer-log{display:flex;flex-direction:column;gap:.4rem}
 .answer-bubble{background:var(--nl);border-radius:8px;padding:.6rem .8rem;font-size:.85rem;border-left:3px solid var(--teal);line-height:1.5}
+.no-answers{font-size:.82rem;color:var(--muted);text-align:center;padding:1.5rem 0}
 
-/* ROAD PICKER MODAL */
-#road-picker{display:none;position:fixed;inset:0;z-index:2000;background:rgba(11,31,58,.96);align-items:flex-end;justify-content:center}
-#road-picker.open{display:flex}
-.rp-sheet{background:var(--nl);border-radius:16px 16px 0 0;padding:1.25rem 1rem 2rem;width:100%;max-width:480px;max-height:70vh;display:flex;flex-direction:column}
-.rp-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--yellow);letter-spacing:1px;margin-bottom:.75rem}
-.rp-search{width:100%;padding:.65rem .9rem;background:var(--navy);border:1.5px solid var(--nm);border-radius:6px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.92rem;outline:none;margin-bottom:.65rem}
-.rp-search:focus{border-color:var(--teal)}
-.rp-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem}
-.rp-item{padding:.6rem .85rem;background:var(--navy);border-radius:6px;font-size:.88rem;cursor:pointer;transition:background .15s;border:1px solid transparent}
-.rp-item:hover{background:var(--nm);border-color:var(--teal)}
-.rp-cancel{margin-top:.65rem;width:100%;padding:.65rem;background:transparent;border:1.5px solid var(--nm);border-radius:6px;color:var(--muted);font-family:'Inter',sans-serif;font-size:.88rem;cursor:pointer}
+/* ── MAP ROAD POPUP ── */
+#road-popup{
+  position:absolute;z-index:700;
+  background:var(--nl);border:1.5px solid var(--nm);border-radius:14px;
+  padding:.75rem .85rem;min-width:200px;max-width:260px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  display:none;
+  pointer-events:all;
+}
+#road-popup.visible{display:block}
+.popup-road-name{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--yellow);letter-spacing:.5px;margin-bottom:.55rem;line-height:1.2}
+.popup-not-in-db{font-size:.72rem;color:var(--muted);margin-bottom:.5rem}
+.popup-btn{
+  display:block;width:100%;padding:.52rem .7rem;margin-bottom:.35rem;
+  background:var(--navy);border:1.5px solid var(--nm);border-radius:8px;
+  color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.82rem;
+  cursor:pointer;text-align:left;line-height:1.3;
+}
+.popup-btn:active:not(.disabled){background:var(--nm);border-color:var(--teal)}
+.popup-btn.guess{border-color:var(--yellow);color:var(--yellow);font-weight:600}
+.popup-btn.guess:active{background:rgba(255,213,79,.1)}
+.popup-btn .popup-cost{font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--red);float:right;margin-top:.1rem}
+.popup-close{display:block;width:100%;padding:.4rem;background:transparent;border:1px solid var(--nm);border-radius:6px;color:var(--muted);font-family:'Inter',sans-serif;font-size:.78rem;cursor:pointer;margin-top:.1rem;text-align:center}
 
-/* SUBURB PICKER */
-#suburb-picker{display:none;position:fixed;inset:0;z-index:2000;background:rgba(11,31,58,.96);align-items:flex-end;justify-content:center}
-#suburb-picker.open{display:flex}
-
-/* GUESS */
-.guess-section{margin-top:.1rem}
-.guess-row{display:flex;gap:.45rem;margin-bottom:.35rem}
-.guess-input{flex:1;padding:.65rem .9rem;background:var(--nl);border:1.5px solid var(--nm);border-radius:6px;color:var(--offwhite);font-family:'Inter',sans-serif;font-size:.92rem;outline:none;transition:border-color .2s}
-.guess-input:focus{border-color:var(--yellow)}
-.guess-submit{padding:.65rem 1.1rem;background:var(--yellow);color:var(--navy);border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1px;cursor:pointer;white-space:nowrap}
-.guess-submit:disabled{opacity:.5;cursor:not-allowed}
-.ac-list{background:var(--nl);border:1px solid var(--nm);border-radius:6px;max-height:140px;overflow-y:auto;display:none}
-.ac-list.open{display:block}
-.ac-item{padding:.5rem .9rem;font-size:.85rem;cursor:pointer;transition:background .15s}
-.ac-item:hover{background:var(--nm)}
-
-/* RESULT */
-#screen-result{align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse at 50% 50%,#162D52,var(--navy))}
+/* ── RESULT ── */
+#screen-result{align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;background:radial-gradient(ellipse at 50% 50%,#162D52,var(--navy))}
 .result-inner{max-width:400px;width:100%;text-align:center}
 .result-verdict{font-family:'Bebas Neue',sans-serif;font-size:3.2rem;line-height:1;margin-bottom:.4rem}
 .result-verdict.win{color:var(--yellow)}.result-verdict.lose{color:var(--red)}
 .result-street{font-size:.92rem;color:var(--muted);margin-bottom:1rem}
 .result-street strong{color:var(--offwhite)}
-.result-map-wrap{border-radius:10px;overflow:hidden;height:170px;margin-bottom:1.1rem}
+.result-map-wrap{border-radius:12px;overflow:hidden;height:200px;margin-bottom:1.1rem}
 #result-map{width:100%;height:100%}
 .result-box{background:var(--nl);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
 .result-pts{font-family:'Bebas Neue',sans-serif;font-size:3.8rem;color:var(--yellow);line-height:1}
@@ -129,7 +170,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
 .result-hi{font-size:.82rem;color:var(--teal)}
 .new-badge{display:inline-block;background:var(--yellow);color:var(--navy);font-family:'Bebas Neue',sans-serif;font-size:.85rem;padding:.15rem .6rem;border-radius:4px;margin-left:.4rem;letter-spacing:1px}
 .result-actions{display:flex;gap:.65rem}
-.result-actions .btn-primary{flex:1}.result-actions .btn-ghost{flex:1}
+.result-actions .btn-primary,.result-actions .btn-ghost{flex:1}
 </style>
 </head>
 <body>
@@ -170,7 +211,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
 
 <!-- ═══ LEADERBOARD ═══ -->
 <div id="screen-leaderboard" class="screen">
-  <div class="lb-inner" style="padding:2rem">
+  <div class="lb-inner">
     <button class="back-btn" onclick="showScreen('landing')">← Back</button>
     <div class="lb-title">LEADERBOARD</div>
     <div class="lb-sub">Top scores across all players</div>
@@ -180,87 +221,71 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
 
 <!-- ═══ GAME ═══ -->
 <div id="screen-game" class="screen">
+  <div id="game-map"></div>
+
   <div class="game-header">
     <div class="game-logo">🚋 MELB STREETS</div>
-    <div class="player-chip">Playing as <span id="hdr-player">Guest</span></div>
-  </div>
-  <div class="score-rail">
-    <div class="score-row">
-      <div class="score-label">Score</div>
-      <div class="score-value" id="score-display">10,000</div>
-    </div>
-    <div class="score-track"><div class="score-fill" id="score-fill" style="width:100%"></div></div>
-  </div>
-  <div id="map-wrap">
-    <div id="game-map"></div>
-    <div class="map-hints" id="map-hints"></div>
-    <div id="map-click-hint" style="display:none;position:absolute;top:.5rem;left:50%;transform:translateX(-50%);z-index:900;background:rgba(11,31,58,.92);border:1px solid var(--yellow);border-radius:20px;padding:.3rem 1rem;font-size:.8rem;color:var(--yellow);pointer-events:none;white-space:nowrap;backdrop-filter:blur(4px)"></div>
-  </div>
-  <div class="q-panel" id="q-panel">
-    <div class="q-section">Ask a question — each answer costs points</div>
-    <div class="q-grid">
-      <button class="q-btn" id="qbtn-0" onclick="askQuestion(0)">
-        What part of Melb?<span class="q-cost free">FREE</span>
-      </button>
-      <button class="q-btn" id="qbtn-1" onclick="askQuestion(1)">
-        N–S or E–W?<span class="q-cost">−500 pts</span>
-      </button>
-      <button class="q-btn" id="qbtn-2" onclick="openRoadPicker()">
-        N/S/E/W of a road?<span class="q-cost">−100 pts</span>
-      </button>
-      <button class="q-btn" id="qbtn-3" onclick="openSuburbPicker()">
-        In a suburb?<span class="q-cost">−250 pts</span>
-      </button>
-
-    </div>
-    <div class="answer-log" id="answer-log"></div>
-    <div class="guess-section">
-      <div class="q-section">Make your guess</div>
-      <div class="guess-row">
-        <input class="guess-input" id="guess-input" type="text" placeholder="Street name… e.g. Swanston St" autocomplete="off" oninput="onGuessInput()"/>
-        <button class="guess-submit" id="guess-submit" onclick="submitGuess()">GUESS</button>
+    <div class="score-pill">
+      <div>
+        <div class="score-num" id="score-display">10,000</div>
+        <div class="score-bar-wrap"><div class="score-bar" id="score-fill" style="width:100%"></div></div>
       </div>
-      <div class="ac-list" id="ac-list"></div>
+      <div class="player-chip">Playing as<span id="hdr-player">Guest</span></div>
     </div>
   </div>
-</div>
 
-<!-- ═══ ROAD PICKER ═══ -->
-<div id="road-picker">
-  <div class="rp-sheet">
-    <!-- Step 1: pick the road -->
-    <div id="rp-step1">
-      <div class="rp-title">Which road to compare?</div>
-      <input class="rp-search" id="rp-search" type="text" placeholder="Search roads… e.g. Hoddle, Bell" oninput="filterRoadList()"/>
-      <button class="rp-cancel" style="margin-bottom:.5rem;border-color:var(--teal);color:var(--teal)" onclick="closeRoadPicker();enableMapClick('road')">👆 Tap road on map instead</button>
-      <div class="rp-list" id="rp-list"></div>
-      <button class="rp-cancel" onclick="closeRoadPicker()">Cancel</button>
+  <div id="tap-hint">👆 Tap any road to question or guess</div>
+  <div id="map-loading">Looking up road…</div>
+  <div class="map-hints" id="map-hints"></div>
+
+  <!-- Road tap popup -->
+  <div id="road-popup">
+    <div class="popup-road-name" id="popup-road-name">Swanston Street</div>
+    <div class="popup-not-in-db" id="popup-not-in-db"></div>
+    <button class="popup-btn" id="popup-ns" onclick="popupAsk('NS')">↕ North or South of this? <span class="popup-cost">−100</span></button>
+    <button class="popup-btn" id="popup-ew" onclick="popupAsk('EW')">↔ East or West of this? <span class="popup-cost">−100</span></button>
+    <button class="popup-btn guess" id="popup-guess" onclick="popupGuess()" style="display:none">🎯 THIS IS MY GUESS</button>
+    <button class="popup-close" onclick="closePopup()">✕ Cancel</button>
+  </div>
+
+  <!-- Suburb tap popup -->
+  <div id="suburb-popup" style="display:none;position:absolute;z-index:700;background:var(--nl);border:1.5px solid var(--nm);border-radius:14px;padding:.75rem .85rem;min-width:200px;max-width:260px;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+    <div class="popup-road-name" id="suburb-popup-name">Fitzroy</div>
+    <button class="popup-btn" onclick="suburbAsk()">🏘 Does it pass through here? <span class="popup-cost">−250</span></button>
+    <button class="popup-close" onclick="document.getElementById('suburb-popup').style.display='none'">✕ Cancel</button>
+  </div>
+
+  <!-- Slide-up panel -->
+  <div id="game-panel">
+    <div class="panel-handle" id="panel-handle"><div class="panel-handle-bar"></div></div>
+    <div class="panel-tabs">
+      <button class="panel-tab active" id="ptab-info" onclick="switchPanelTab('info')">About the Road</button>
+      <button class="panel-tab" id="ptab-answers" onclick="switchPanelTab('answers')">Answers</button>
     </div>
-    <!-- Step 2: pick the axis -->
-    <div id="rp-step2" style="display:none">
-      <div class="rp-title" id="rp-step2-title">Direction to ask?</div>
-      <div style="font-size:.82rem;color:var(--muted);margin-bottom:1rem" id="rp-step2-sub"></div>
-      <div style="display:flex;flex-direction:column;gap:.65rem;margin-bottom:1rem">
-        <button class="q-btn" style="font-size:.95rem;padding:.85rem" onclick="confirmRoadAxis('NS')">
-          North or South?
-        </button>
-        <button class="q-btn" style="font-size:.95rem;padding:.85rem" onclick="confirmRoadAxis('EW')">
-          East or West?
-        </button>
+    <div class="panel-content">
+      <div class="tab-pane active" id="tab-info">
+        <div class="info-q-section">Questions about the secret road itself</div>
+        <div class="info-q-grid">
+          <button class="info-q-btn" id="qbtn-0" onclick="askInfoQ(0)">
+            What part of Melb?<span class="q-cost free">FREE</span>
+          </button>
+          <button class="info-q-btn" id="qbtn-1" onclick="askInfoQ(1)">
+            N–S or E–W road?<span class="q-cost">−500 pts</span>
+          </button>
+        </div>
+        <div style="font-size:.75rem;color:var(--muted);line-height:1.5;padding:.5rem .2rem">
+          👆 Tap any road on the map to ask<br>
+          <strong style="color:var(--offwhite)">North or South / East or West</strong> of it (−100 pts each)<br><br>
+          Tap a non-road area to ask about that <strong style="color:var(--offwhite)">suburb</strong> (−250 pts)<br><br>
+          Roads highlighted in <strong style="color:var(--yellow)">yellow</strong> are in the guess list — tap to guess!
+        </div>
       </div>
-      <button class="rp-cancel" onclick="backToRoadStep1()">← Back</button>
+      <div class="tab-pane" id="tab-answers">
+        <div class="answer-log" id="answer-log">
+          <div class="no-answers">No answers yet — tap the map to start!</div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
-<!-- ═══ SUBURB PICKER ═══ -->
-<div id="suburb-picker">
-  <div class="rp-sheet">
-    <div class="rp-title">Which suburb?</div>
-    <input class="rp-search" id="sp-search" type="text" placeholder="Search suburb… e.g. Richmond, Fitzroy" oninput="filterSuburbList()"/>
-    <button class="rp-cancel" style="margin-bottom:.5rem;border-color:var(--teal);color:var(--teal)" onclick="closeSuburbPicker();enableMapClick('suburb')">👆 Tap suburb on map instead</button>
-    <div class="rp-list" id="sp-list"></div>
-    <button class="rp-cancel" onclick="closeSuburbPicker()">Cancel</button>
   </div>
 </div>
 
@@ -283,160 +308,287 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--navy);colo
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════
-// STREET DATA — every major road in the Melbourne metro area
-// Fields: name, lat, lng (centrepoint), orientation NS/EW/DIAG,
-//         region, insideM3, suburbs[]
-// ══════════════════════════════════════════════════════════
-const STREETS = [
-  // ── CBD & INNER ──
-  {name:"Swanston Street",lat:-37.8136,lng:144.9631,o:"NS",region:"inner",m3:true,s:["CBD","Carlton","Parkville","Melbourne"]},
-  {name:"Elizabeth Street",lat:-37.8143,lng:144.9576,o:"NS",region:"inner",m3:true,s:["CBD","Flemington","North Melbourne","Melbourne"]},
-  {name:"Spencer Street",lat:-37.8178,lng:144.9523,o:"NS",region:"inner",m3:true,s:["CBD","West Melbourne","Docklands","Melbourne"]},
-  {name:"King Street",lat:-37.8160,lng:144.9551,o:"NS",region:"inner",m3:true,s:["CBD","West Melbourne","Melbourne"]},
-  {name:"William Street",lat:-37.8154,lng:144.9563,o:"NS",region:"inner",m3:true,s:["CBD","Melbourne"]},
-  {name:"Collins Street",lat:-37.8159,lng:144.9665,o:"EW",region:"inner",m3:true,s:["CBD","East Melbourne","Melbourne"]},
-  {name:"Bourke Street",lat:-37.8144,lng:144.9634,o:"EW",region:"inner",m3:true,s:["CBD","Docklands","Melbourne"]},
-  {name:"Flinders Street",lat:-37.8183,lng:144.9671,o:"EW",region:"inner",m3:true,s:["CBD","Melbourne"]},
-  {name:"Latrobe Street",lat:-37.8101,lng:144.9603,o:"EW",region:"inner",m3:true,s:["CBD","North Melbourne","Melbourne"]},
-  {name:"Victoria Street",lat:-37.8079,lng:144.9790,o:"EW",region:"inner",m3:true,s:["Carlton","North Melbourne","Richmond","Collingwood","Abbotsford"]},
+// Each road: name, lat1/lng1 = one end, lat2/lng2 = other end
+// midpoint (lat,lng) is computed automatically
+// o = orientation, region, s = suburbs
+const RAW_STREETS = [
+  // ── CBD ──
+  {name:"Swanston Street",lat1:-37.7986,lng1:144.9631,lat2:-37.8310,lng2:144.9631,o:"NS",region:"inner",s:["CBD","Carlton","Parkville","Melbourne"]},
+  {name:"Elizabeth Street",lat1:-37.7980,lng1:144.9576,lat2:-37.8280,lng2:144.9576,o:"NS",region:"inner",s:["CBD","North Melbourne","Melbourne"]},
+  {name:"Spencer Street",lat1:-37.8050,lng1:144.9523,lat2:-37.8310,lng2:144.9523,o:"NS",region:"inner",s:["CBD","West Melbourne","Docklands","Melbourne"]},
+  {name:"King Street",lat1:-37.8060,lng1:144.9551,lat2:-37.8260,lng2:144.9551,o:"NS",region:"inner",s:["CBD","West Melbourne","Melbourne"]},
+  {name:"William Street",lat1:-37.8060,lng1:144.9563,lat2:-37.8260,lng2:144.9563,o:"NS",region:"inner",s:["CBD","Melbourne"]},
+  {name:"Collins Street",lat1:-37.8159,lng1:144.9523,lat2:-37.8159,lng2:144.9820,o:"EW",region:"inner",s:["CBD","East Melbourne","Melbourne"]},
+  {name:"Bourke Street",lat1:-37.8144,lng1:144.9395,lat2:-37.8144,lng2:144.9840,o:"EW",region:"inner",s:["CBD","Docklands","Melbourne"]},
+  {name:"Flinders Street",lat1:-37.8183,lng1:144.9395,lat2:-37.8183,lng2:144.9820,o:"EW",region:"inner",s:["CBD","Melbourne"]},
+  {name:"La Trobe Street",lat1:-37.8101,lng1:144.9395,lat2:-37.8101,lng2:144.9740,o:"EW",region:"inner",s:["CBD","North Melbourne","Melbourne"]},
+  {name:"Lonsdale Street",lat1:-37.8127,lng1:144.9395,lat2:-37.8127,lng2:144.9820,o:"EW",region:"inner",s:["CBD","Melbourne"]},
+  {name:"Little Collins Street",lat1:-37.8144,lng1:144.9523,lat2:-37.8144,lng2:144.9820,o:"EW",region:"inner",s:["CBD","Melbourne"]},
+  {name:"Little Bourke Street",lat1:-37.8130,lng1:144.9523,lat2:-37.8130,lng2:144.9820,o:"EW",region:"inner",s:["CBD","Melbourne"]},
+  {name:"Flinders Lane",lat1:-37.8172,lng1:144.9523,lat2:-37.8172,lng2:144.9820,o:"EW",region:"inner",s:["CBD","Melbourne"]},
+  {name:"Exhibition Street",lat1:-37.8070,lng1:144.9720,lat2:-37.8240,lng2:144.9720,o:"NS",region:"inner",s:["CBD","East Melbourne","Melbourne"]},
+  {name:"Spring Street",lat1:-37.8060,lng1:144.9730,lat2:-37.8240,lng2:144.9730,o:"NS",region:"inner",s:["CBD","East Melbourne","Melbourne"]},
+  {name:"Russell Street",lat1:-37.8060,lng1:144.9672,lat2:-37.8240,lng2:144.9672,o:"NS",region:"inner",s:["CBD","Melbourne"]},
+  {name:"Mackenzie Street",lat1:-37.8060,lng1:144.9652,lat2:-37.8110,lng2:144.9652,o:"NS",region:"inner",s:["CBD","Melbourne"]},
 
   // ── INNER NORTH ──
-  {name:"Brunswick Street",lat:-37.7987,lng:144.9779,o:"NS",region:"inner north",m3:true,s:["Fitzroy","Fitzroy North"]},
-  {name:"Smith Street",lat:-37.8017,lng:144.9843,o:"NS",region:"inner north",m3:true,s:["Fitzroy","Collingwood"]},
-  {name:"Johnston Street",lat:-37.8033,lng:144.9838,o:"EW",region:"inner north",m3:true,s:["Fitzroy","Collingwood","Abbotsford"]},
-  {name:"Royal Parade",lat:-37.7882,lng:144.9591,o:"NS",region:"inner north",m3:true,s:["Parkville","Carlton North"]},
-  {name:"Flemington Road",lat:-37.7942,lng:144.9443,o:"EW",region:"inner north",m3:true,s:["Parkville","North Melbourne","Flemington"]},
-  {name:"Lygon Street",lat:-37.7920,lng:144.9666,o:"NS",region:"inner north",m3:true,s:["Carlton","Brunswick"]},
-  {name:"Sydney Road",lat:-37.7500,lng:144.9609,o:"NS",region:"north",m3:false,s:["Brunswick","Coburg","Fawkner","Moreland"]},
-  {name:"Nicholson Street",lat:-37.7930,lng:144.9790,o:"NS",region:"inner north",m3:true,s:["Carlton North","Fitzroy North","Fitzroy"]},
-  {name:"Rathdowne Street",lat:-37.7930,lng:144.9715,o:"NS",region:"inner north",m3:true,s:["Carlton","Carlton North"]},
-  {name:"Park Street",lat:-37.8030,lng:144.9680,o:"EW",region:"inner north",m3:true,s:["Carlton","Parkville"]},
-
-  // ── INNER EAST ──
-  {name:"Hoddle Street",lat:-37.8140,lng:144.9897,o:"NS",region:"inner east",m3:true,s:["Richmond","Collingwood","Abbotsford"]},
-  {name:"Punt Road",lat:-37.8372,lng:144.9899,o:"NS",region:"south east",m3:false,s:["Richmond","Prahran","Windsor","South Yarra"]},
-  {name:"Bridge Road",lat:-37.8187,lng:144.9893,o:"EW",region:"inner east",m3:false,s:["Richmond"]},
-  {name:"Swan Street",lat:-37.8238,lng:144.9920,o:"EW",region:"inner east",m3:false,s:["Richmond","Burnley"]},
-  {name:"Church Street Richmond",lat:-37.8218,lng:144.9988,o:"NS",region:"inner east",m3:false,s:["Richmond","Hawthorn"]},
-
-  // ── SOUTH / INNER SOUTH ──
-  {name:"St Kilda Road",lat:-37.8480,lng:144.9741,o:"NS",region:"south",m3:false,s:["Melbourne","South Yarra","St Kilda","Albert Park"]},
-  {name:"Chapel Street",lat:-37.8524,lng:144.9952,o:"NS",region:"south east",m3:false,s:["South Yarra","Prahran","Windsor"]},
-  {name:"Toorak Road",lat:-37.8413,lng:145.0162,o:"EW",region:"south east",m3:false,s:["South Yarra","Toorak","Camberwell"]},
-  {name:"Commercial Road",lat:-37.8479,lng:144.9930,o:"EW",region:"south east",m3:false,s:["Prahran","South Yarra"]},
-  {name:"High Street Prahran",lat:-37.8550,lng:145.0002,o:"EW",region:"south east",m3:false,s:["Prahran","Windsor","Armadale"]},
-  {name:"Dandenong Road",lat:-37.8774,lng:145.0302,o:"EW",region:"south east",m3:false,s:["Malvern East","Caulfield","Carnegie","Murrumbeena"]},
-  {name:"Alma Road",lat:-37.8640,lng:144.9940,o:"EW",region:"south east",m3:false,s:["St Kilda East","Caulfield North"]},
-  {name:"Glen Eira Road",lat:-37.8820,lng:144.9990,o:"NS",region:"south east",m3:false,s:["Ripponlea","Elsternwick","Caulfield North","Carnegie"]},
-  {name:"Inkerman Street",lat:-37.8660,lng:144.9850,o:"EW",region:"south",m3:false,s:["St Kilda","Elwood","St Kilda East"]},
-  {name:"Fitzroy Street St Kilda",lat:-37.8643,lng:144.9792,o:"NS",region:"south",m3:false,s:["St Kilda","St Kilda East"]},
-  {name:"Nepean Highway",lat:-37.9620,lng:145.0512,o:"NS",region:"south",m3:false,s:["Moorabbin","Cheltenham","Mentone","Frankston"]},
-  {name:"South Road Moorabbin",lat:-37.9265,lng:145.0500,o:"EW",region:"south",m3:false,s:["Moorabbin","Bentleigh East"]},
-  {name:"Centre Road",lat:-37.9093,lng:145.0330,o:"EW",region:"south",m3:false,s:["Bentleigh","East Bentleigh","Bentleigh East"]},
+  {name:"Victoria Street",lat1:-37.8079,lng1:144.9490,lat2:-37.8079,lng2:145.0000,o:"EW",region:"inner north",s:["Carlton","North Melbourne","Richmond","Collingwood","Abbotsford"]},
+  {name:"Brunswick Street",lat1:-37.7800,lng1:144.9779,lat2:-37.8100,lng2:144.9779,o:"NS",region:"inner north",s:["Fitzroy","Fitzroy North"]},
+  {name:"Smith Street",lat1:-37.7850,lng1:144.9843,lat2:-37.8100,lng2:144.9843,o:"NS",region:"inner north",s:["Fitzroy","Collingwood"]},
+  {name:"Johnston Street",lat1:-37.8033,lng1:144.9650,lat2:-37.8033,lng2:145.0000,o:"EW",region:"inner north",s:["Fitzroy","Collingwood","Abbotsford"]},
+  {name:"Royal Parade",lat1:-37.7700,lng1:144.9591,lat2:-37.8000,lng2:144.9591,o:"NS",region:"inner north",s:["Parkville","Carlton North"]},
+  {name:"Flemington Road",lat1:-37.7942,lng1:144.9280,lat2:-37.7942,lng2:144.9600,o:"EW",region:"inner north",s:["Parkville","North Melbourne","Flemington"]},
+  {name:"Lygon Street",lat1:-37.7700,lng1:144.9666,lat2:-37.8070,lng2:144.9666,o:"NS",region:"inner north",s:["Carlton","Brunswick"]},
+  {name:"Nicholson Street",lat1:-37.7750,lng1:144.9790,lat2:-37.8050,lng2:144.9790,o:"NS",region:"inner north",s:["Carlton North","Fitzroy North","Fitzroy"]},
+  {name:"Rathdowne Street",lat1:-37.7750,lng1:144.9715,lat2:-37.8050,lng2:144.9715,o:"NS",region:"inner north",s:["Carlton","Carlton North"]},
+  {name:"Park Street Carlton",lat1:-37.8030,lng1:144.9580,lat2:-37.8030,lng2:144.9780,o:"EW",region:"inner north",s:["Carlton","Parkville"]},
+  {name:"Princes Street Carlton",lat1:-37.7930,lng1:144.9630,lat2:-37.7930,lng2:144.9780,o:"EW",region:"inner north",s:["Carlton"]},
+  {name:"Grattan Street",lat1:-37.7990,lng1:144.9580,lat2:-37.7990,lng2:144.9800,o:"EW",region:"inner north",s:["Carlton","Parkville"]},
+  {name:"Elgin Street",lat1:-37.7965,lng1:144.9650,lat2:-37.7965,lng2:144.9840,o:"EW",region:"inner north",s:["Carlton"]},
+  {name:"Gertrude Street",lat1:-37.8010,lng1:144.9750,lat2:-37.8010,lng2:144.9980,o:"EW",region:"inner north",s:["Fitzroy","Collingwood"]},
+  {name:"Alexandra Parade",lat1:-37.7966,lng1:144.9750,lat2:-37.7966,lng2:145.0100,o:"EW",region:"inner north",s:["Fitzroy North","Clifton Hill","Northcote"]},
+  {name:"Gold Street",lat1:-37.7900,lng1:144.9750,lat2:-37.7900,lng2:144.9900,o:"EW",region:"inner north",s:["Clifton Hill","Fitzroy North"]},
+  {name:"Queens Parade",lat1:-37.7880,lng1:144.9850,lat2:-37.8000,lng2:144.9980,o:"NS",region:"inner north",s:["Clifton Hill","Fitzroy North","Collingwood"]},
+  {name:"Heidelberg Road Clifton Hill",lat1:-37.7852,lng1:144.9980,lat2:-37.7852,lng2:145.0200,o:"EW",region:"inner north",s:["Clifton Hill","Northcote","Fairfield"]},
+  {name:"High Street Northcote",lat1:-37.7700,lng1:144.9992,lat2:-37.7900,lng2:144.9992,o:"NS",region:"inner north",s:["Northcote","Thornbury"]},
+  {name:"Separation Street",lat1:-37.7750,lng1:144.9750,lat2:-37.7750,lng2:145.0000,o:"EW",region:"inner north",s:["Northcote","Fairfield","Alphington"]},
+  {name:"Racecourse Road",lat1:-37.7893,lng1:144.9280,lat2:-37.7893,lng2:144.9540,o:"EW",region:"inner north",s:["Flemington","North Melbourne"]},
+  {name:"Boundary Road Fitzroy",lat1:-37.7980,lng1:144.9680,lat2:-37.7980,lng2:144.9900,o:"EW",region:"inner north",s:["Fitzroy","Fitzroy North","Collingwood"]},
 
   // ── NORTH ──
-  {name:"Bell Street",lat:-37.7347,lng:145.0312,o:"EW",region:"north",m3:false,s:["Coburg","Preston","Heidelberg West","Heidelberg"]},
-  {name:"High Street Thornbury",lat:-37.7583,lng:144.9992,o:"NS",region:"north",m3:false,s:["Northcote","Thornbury","Preston","Reservoir"]},
-  {name:"Murray Road Preston",lat:-37.7448,lng:145.0103,o:"EW",region:"north",m3:false,s:["Preston","Reservoir"]},
-  {name:"Plenty Road",lat:-37.7100,lng:145.0632,o:"NS",region:"north",m3:false,s:["Bundoora","Mill Park","South Morang","Plenty"]},
-  {name:"Mahoneys Road",lat:-37.7022,lng:145.0472,o:"EW",region:"north",m3:false,s:["Mill Park","Bundoora"]},
-  {name:"Dalton Road",lat:-37.6850,lng:145.0500,o:"EW",region:"north",m3:false,s:["Thomastown","Epping"]},
-  {name:"Epping Road",lat:-37.6700,lng:145.0220,o:"NS",region:"north",m3:false,s:["Epping","Lalor","Thomastown"]},
-  {name:"Cooper Street Epping",lat:-37.6450,lng:145.0120,o:"EW",region:"north",m3:false,s:["Epping","South Morang"]},
-  {name:"Mickleham Road",lat:-37.6500,lng:144.9140,o:"NS",region:"north",m3:false,s:["Tullamarine","Broadmeadows","Greenvale","Mickleham"]},
-  {name:"Camp Road",lat:-37.6850,lng:144.9140,o:"EW",region:"north",m3:false,s:["Broadmeadows","Dallas","Glenroy"]},
-  {name:"Pascoe Vale Road",lat:-37.7100,lng:144.9310,o:"NS",region:"north",m3:false,s:["Coburg North","Pascoe Vale","Glenroy","Hadfield"]},
-  {name:"Gaffney Street",lat:-37.7200,lng:144.9450,o:"EW",region:"north",m3:false,s:["Coburg","Coburg North","Pascoe Vale South"]},
+  {name:"Sydney Road",lat1:-37.7000,lng1:144.9609,lat2:-37.7750,lng2:144.9609,o:"NS",region:"north",s:["Brunswick","Coburg","Fawkner","Moreland"]},
+  {name:"Bell Street",lat1:-37.7347,lng1:144.8900,lat2:-37.7347,lng2:145.1000,o:"EW",region:"north",s:["Coburg","Preston","Heidelberg West","Heidelberg"]},
+  {name:"High Street Thornbury",lat1:-37.7400,lng1:144.9992,lat2:-37.7750,lng2:144.9992,o:"NS",region:"north",s:["Northcote","Thornbury","Preston","Reservoir"]},
+  {name:"Murray Road Preston",lat1:-37.7448,lng1:144.9800,lat2:-37.7448,lng2:145.0400,o:"EW",region:"north",s:["Preston","Reservoir"]},
+  {name:"Plenty Road",lat1:-37.6700,lng1:145.0632,lat2:-37.7500,lng2:145.0632,o:"NS",region:"north",s:["Bundoora","Mill Park","South Morang","Plenty"]},
+  {name:"Mahoneys Road",lat1:-37.7022,lng1:145.0000,lat2:-37.7022,lng2:145.1000,o:"EW",region:"north",s:["Mill Park","Bundoora"]},
+  {name:"Dalton Road",lat1:-37.6850,lng1:145.0100,lat2:-37.6850,lng2:145.0800,o:"EW",region:"north",s:["Thomastown","Epping"]},
+  {name:"Epping Road",lat1:-37.6400,lng1:145.0220,lat2:-37.7000,lng2:145.0220,o:"NS",region:"north",s:["Epping","Lalor","Thomastown"]},
+  {name:"Cooper Street Epping",lat1:-37.6450,lng1:144.9700,lat2:-37.6450,lng2:145.0600,o:"EW",region:"north",s:["Epping","South Morang"]},
+  {name:"Mickleham Road",lat1:-37.6200,lng1:144.9140,lat2:-37.7100,lng2:144.9140,o:"NS",region:"north",s:["Tullamarine","Broadmeadows","Greenvale","Mickleham"]},
+  {name:"Camp Road",lat1:-37.6850,lng1:144.8800,lat2:-37.6850,lng2:144.9500,o:"EW",region:"north",s:["Broadmeadows","Dallas","Glenroy"]},
+  {name:"Pascoe Vale Road",lat1:-37.6900,lng1:144.9310,lat2:-37.7400,lng2:144.9310,o:"NS",region:"north",s:["Coburg North","Pascoe Vale","Glenroy","Hadfield"]},
+  {name:"Gaffney Street",lat1:-37.7200,lng1:144.9200,lat2:-37.7200,lng2:144.9700,o:"EW",region:"north",s:["Coburg","Coburg North","Pascoe Vale South"]},
+  {name:"Mt Alexander Road",lat1:-37.7400,lng1:144.9410,lat2:-37.8000,lng2:144.9410,o:"NS",region:"north",s:["Flemington","Moonee Ponds","Essendon","Aberfeldie"]},
+  {name:"Keilor Road",lat1:-37.7200,lng1:144.8890,lat2:-37.7800,lng2:144.8890,o:"NS",region:"north",s:["Essendon North","Keilor East","Niddrie"]},
+  {name:"Buckley Street Essendon",lat1:-37.7520,lng1:144.9000,lat2:-37.7520,lng2:144.9500,o:"EW",region:"north",s:["Essendon","Moonee Ponds","Aberfeldie"]},
+  {name:"Puckle Street",lat1:-37.7650,lng1:144.9200,lat2:-37.7650,lng2:144.9500,o:"EW",region:"north",s:["Moonee Ponds"]},
+  {name:"Melrose Drive",lat1:-37.6900,lng1:144.8650,lat2:-37.7100,lng2:144.8650,o:"NS",region:"north",s:["Tullamarine","Airport West"]},
+  {name:"Sharps Road",lat1:-37.6750,lng1:144.8600,lat2:-37.6750,lng2:144.9200,o:"EW",region:"north",s:["Tullamarine","Broadmeadows","Westmeadows"]},
+  {name:"Broadmeadows Road",lat1:-37.6700,lng1:144.9100,lat2:-37.6700,lng2:144.9600,o:"EW",region:"north",s:["Broadmeadows","Westmeadows","Meadow Heights"]},
+  {name:"Somerton Road",lat1:-37.6300,lng1:144.9000,lat2:-37.6300,lng2:145.0000,o:"EW",region:"north",s:["Roxburgh Park","Campbellfield","Coolaroo"]},
+  {name:"Craigieburn Road",lat1:-37.6000,lng1:144.9400,lat2:-37.6400,lng2:144.9400,o:"NS",region:"north",s:["Craigieburn","Roxburgh Park"]},
+  {name:"Grand Boulevard Craigieburn",lat1:-37.5950,lng1:144.9100,lat2:-37.5950,lng2:144.9600,o:"EW",region:"north",s:["Craigieburn"]},
+  {name:"Barry Road",lat1:-37.6550,lng1:144.9000,lat2:-37.6550,lng2:145.0500,o:"EW",region:"north",s:["Campbellfield","Coolaroo","Lalor","Thomastown"]},
+  {name:"Edgars Road",lat1:-37.6700,lng1:145.0100,lat2:-37.7200,lng2:145.0100,o:"NS",region:"north",s:["Lalor","Thomastown","Reservoir","Bundoora"]},
+  {name:"Dundas Street Thornbury",lat1:-37.7530,lng1:144.9900,lat2:-37.7530,lng2:145.0200,o:"EW",region:"north",s:["Thornbury","Preston"]},
+  {name:"Tyler Street Thornbury",lat1:-37.7600,lng1:144.9900,lat2:-37.7600,lng2:145.0100,o:"EW",region:"north",s:["Thornbury","Preston"]},
+  {name:"Gilbert Road Preston",lat1:-37.7250,lng1:144.9980,lat2:-37.7450,lng2:144.9980,o:"NS",region:"north",s:["Preston","Reservoir"]},
+  {name:"Plenty Road Bundoora",lat1:-37.6900,lng1:145.0632,lat2:-37.7200,lng2:145.0632,o:"NS",region:"north",s:["Bundoora","Mill Park"]},
+  {name:"McKimmies Road",lat1:-37.7050,lng1:145.0200,lat2:-37.7050,lng2:145.1200,o:"EW",region:"north",s:["Bundoora","Mill Park","Doreen"]},
 
   // ── NORTH EAST ──
-  {name:"Heidelberg Road",lat:-37.7752,lng:145.0542,o:"EW",region:"north east",m3:false,s:["Fairfield","Ivanhoe","Heidelberg"]},
-  {name:"Lower Plenty Road",lat:-37.7522,lng:145.0872,o:"NS",region:"north east",m3:false,s:["Viewbank","Rosanna","Bulleen"]},
-  {name:"Fitzsimons Lane",lat:-37.7312,lng:145.1732,o:"NS",region:"north east",m3:false,s:["Templestowe","Eltham","Warrandyte"]},
-  {name:"Main Road Eltham",lat:-37.7140,lng:145.1490,o:"EW",region:"north east",m3:false,s:["Eltham","Diamond Creek","Hurstbridge"]},
-  {name:"Reynolds Road",lat:-37.7550,lng:145.1150,o:"EW",region:"north east",m3:false,s:["Doncaster East","Templestowe Lower"]},
-  {name:"Doncaster Road",lat:-37.7913,lng:145.1152,o:"EW",region:"east",m3:false,s:["Balwyn North","Doncaster","Templestowe Lower"]},
-  {name:"Manningham Road",lat:-37.7760,lng:145.1170,o:"EW",region:"north east",m3:false,s:["Bulleen","Doncaster"]},
-  {name:"Greensborough Road",lat:-37.7000,lng:145.1000,o:"NS",region:"north east",m3:false,s:["Greensborough","Watsonia","Rosanna"]},
-  {name:"Diamond Creek Road",lat:-37.6800,lng:145.1400,o:"NS",region:"north east",m3:false,s:["Diamond Creek","Eltham","Doreen"]},
+  {name:"Heidelberg Road",lat1:-37.7752,lng1:145.0200,lat2:-37.7752,lng2:145.0800,o:"EW",region:"north east",s:["Fairfield","Ivanhoe","Heidelberg"]},
+  {name:"Lower Plenty Road",lat1:-37.7300,lng1:145.0872,lat2:-37.7700,lng2:145.0872,o:"NS",region:"north east",s:["Viewbank","Rosanna","Bulleen"]},
+  {name:"Fitzsimons Lane",lat1:-37.7000,lng1:145.1732,lat2:-37.7600,lng2:145.1732,o:"NS",region:"north east",s:["Templestowe","Eltham","Warrandyte"]},
+  {name:"Main Road Eltham",lat1:-37.7140,lng1:145.1100,lat2:-37.7140,lng2:145.1900,o:"EW",region:"north east",s:["Eltham","Diamond Creek","Hurstbridge"]},
+  {name:"Reynolds Road",lat1:-37.7550,lng1:145.0800,lat2:-37.7550,lng2:145.1500,o:"EW",region:"north east",s:["Doncaster East","Templestowe Lower"]},
+  {name:"Doncaster Road",lat1:-37.7913,lng1:145.0700,lat2:-37.7913,lng2:145.1600,o:"EW",region:"north east",s:["Balwyn North","Doncaster","Templestowe Lower"]},
+  {name:"Manningham Road",lat1:-37.7760,lng1:145.0800,lat2:-37.7760,lng2:145.1500,o:"EW",region:"north east",s:["Bulleen","Doncaster"]},
+  {name:"Greensborough Road",lat1:-37.6800,lng1:145.1000,lat2:-37.7500,lng2:145.1000,o:"NS",region:"north east",s:["Greensborough","Watsonia","Rosanna"]},
+  {name:"Diamond Creek Road",lat1:-37.6600,lng1:145.1400,lat2:-37.7200,lng2:145.1400,o:"NS",region:"north east",s:["Diamond Creek","Eltham","Doreen"]},
+  {name:"Burgundy Street Heidelberg",lat1:-37.7550,lng1:145.0550,lat2:-37.7550,lng2:145.0900,o:"EW",region:"north east",s:["Heidelberg"]},
+  {name:"Waterdale Road Heidelberg",lat1:-37.7450,lng1:145.0500,lat2:-37.7650,lng2:145.0500,o:"NS",region:"north east",s:["Heidelberg West","Ivanhoe","Bellfield"]},
+  {name:"Banksia Street Heidelberg",lat1:-37.7620,lng1:145.0500,lat2:-37.7620,lng2:145.0750,o:"EW",region:"north east",s:["Heidelberg","Rosanna"]},
+  {name:"Oriel Road",lat1:-37.7700,lng1:145.0450,lat2:-37.7700,lng2:145.0700,o:"EW",region:"north east",s:["Ivanhoe East","Rosanna","Heidelberg"]},
+  {name:"Upper Heidelberg Road",lat1:-37.7500,lng1:145.0600,lat2:-37.7800,lng2:145.0750,o:"NS",region:"north east",s:["Ivanhoe","Heidelberg","Bellfield"]},
+  {name:"Sherbourne Road",lat1:-37.6900,lng1:145.0700,lat2:-37.7200,lng2:145.0700,o:"NS",region:"north east",s:["Briar Hill","Eltham","Montmorency"]},
+  {name:"Para Road",lat1:-37.7100,lng1:145.0900,lat2:-37.7100,lng2:145.1300,o:"EW",region:"north east",s:["Greensborough","Montmorency","Eltham"]},
+  {name:"Templestowe Road",lat1:-37.7450,lng1:145.1300,lat2:-37.7700,lng2:145.1300,o:"NS",region:"north east",s:["Templestowe","Doncaster East"]},
+  {name:"Foote Street",lat1:-37.7400,lng1:145.1200,lat2:-37.7400,lng2:145.1600,o:"EW",region:"north east",s:["Templestowe","Doncaster East"]},
 
   // ── EAST ──
-  {name:"Whitehorse Road",lat:-37.8149,lng:145.0892,o:"EW",region:"east",m3:false,s:["Balwyn","Box Hill","Nunawading","Mitcham"]},
-  {name:"Canterbury Road",lat:-37.8213,lng:145.0752,o:"EW",region:"east",m3:false,s:["Surrey Hills","Canterbury","Balwyn","Box Hill South"]},
-  {name:"Burke Road",lat:-37.8463,lng:145.0672,o:"NS",region:"east",m3:false,s:["Camberwell","Glen Iris","Canterbury","Hawthorn East"]},
-  {name:"High Street Kew",lat:-37.8213,lng:145.0432,o:"EW",region:"east",m3:false,s:["Kew","Kew East","Hawthorn East"]},
-  {name:"Glenferrie Road",lat:-37.8213,lng:145.0342,o:"NS",region:"east",m3:false,s:["Hawthorn","Malvern","Kooyong"]},
-  {name:"Maroondah Highway",lat:-37.8138,lng:145.2192,o:"EW",region:"east",m3:false,s:["Ringwood","Croydon","Bayswater","Mooroolbark"]},
-  {name:"Dorset Road",lat:-37.8390,lng:145.2370,o:"NS",region:"east",m3:false,s:["Boronia","Bayswater","Ferntree Gully"]},
-  {name:"Mountain Highway",lat:-37.8560,lng:145.2450,o:"EW",region:"east",m3:false,s:["Wantirna","Knox City","Ferntree Gully"]},
-  {name:"Stud Road",lat:-37.8972,lng:145.2422,o:"NS",region:"east",m3:false,s:["Rowville","Knoxfield","Bayswater"]},
-  {name:"Ferntree Gully Road",lat:-37.8620,lng:145.2010,o:"EW",region:"east",m3:false,s:["Scoresby","Ferntree Gully","Knoxfield","Wantirna South"]},
+  {name:"Whitehorse Road",lat1:-37.8149,lng1:145.0300,lat2:-37.8149,lng2:145.1800,o:"EW",region:"east",s:["Balwyn","Box Hill","Nunawading","Mitcham"]},
+  {name:"Canterbury Road",lat1:-37.8213,lng1:145.0300,lat2:-37.8213,lng2:145.1400,o:"EW",region:"east",s:["Surrey Hills","Canterbury","Balwyn","Box Hill South"]},
+  {name:"Burke Road",lat1:-37.8200,lng1:145.0672,lat2:-37.8700,lng2:145.0672,o:"NS",region:"east",s:["Camberwell","Glen Iris","Canterbury","Hawthorn East"]},
+  {name:"High Street Kew",lat1:-37.8213,lng1:145.0050,lat2:-37.8213,lng2:145.0800,o:"EW",region:"east",s:["Kew","Kew East","Hawthorn East"]},
+  {name:"Glenferrie Road",lat1:-37.8000,lng1:145.0342,lat2:-37.8600,lng2:145.0342,o:"NS",region:"east",s:["Hawthorn","Malvern","Kooyong"]},
+  {name:"Maroondah Highway",lat1:-37.8138,lng1:145.1500,lat2:-37.8138,lng2:145.3000,o:"EW",region:"east",s:["Ringwood","Croydon","Bayswater","Mooroolbark"]},
+  {name:"Dorset Road",lat1:-37.8100,lng1:145.2370,lat2:-37.8700,lng2:145.2370,o:"NS",region:"east",s:["Boronia","Bayswater","Ferntree Gully"]},
+  {name:"Mountain Highway",lat1:-37.8560,lng1:145.2100,lat2:-37.8560,lng2:145.2900,o:"EW",region:"east",s:["Wantirna","Knox City","Ferntree Gully"]},
+  {name:"Stud Road",lat1:-37.8600,lng1:145.2422,lat2:-37.9400,lng2:145.2422,o:"NS",region:"east",s:["Rowville","Knoxfield","Bayswater"]},
+  {name:"Ferntree Gully Road",lat1:-37.8620,lng1:145.1500,lat2:-37.8620,lng2:145.2500,o:"EW",region:"east",s:["Scoresby","Ferntree Gully","Knoxfield","Wantirna South"]},
+  {name:"Boronia Road",lat1:-37.8590,lng1:145.2000,lat2:-37.8590,lng2:145.2700,o:"EW",region:"east",s:["Boronia","Ferntree Gully","Upper Ferntree Gully"]},
+  {name:"Heatherdale Road",lat1:-37.8000,lng1:145.1800,lat2:-37.8400,lng2:145.1800,o:"NS",region:"east",s:["Mitcham","Nunawading","Ringwood North"]},
+  {name:"Station Street Box Hill",lat1:-37.8190,lng1:145.1200,lat2:-37.8350,lng2:145.1200,o:"NS",region:"east",s:["Box Hill","Box Hill South"]},
+  {name:"Main Street Blackburn",lat1:-37.8180,lng1:145.1500,lat2:-37.8400,lng2:145.1500,o:"NS",region:"east",s:["Blackburn","Blackburn South","Nunawading"]},
+  {name:"Surrey Road",lat1:-37.8250,lng1:145.1000,lat2:-37.8450,lng2:145.1000,o:"NS",region:"east",s:["Surrey Hills","Box Hill South"]},
+  {name:"Union Road Surrey Hills",lat1:-37.8300,lng1:145.0750,lat2:-37.8300,lng2:145.1050,o:"EW",region:"east",s:["Surrey Hills","Box Hill South","Chatham"]},
+  {name:"Middleborough Road",lat1:-37.8000,lng1:145.1000,lat2:-37.8600,lng2:145.1000,o:"NS",region:"east",s:["Blackburn","Box Hill South","Nunawading"]},
+  {name:"Springvale Road",lat1:-37.8000,lng1:145.1502,lat2:-37.9800,lng2:145.1502,o:"NS",region:"east",s:["Nunawading","Mitcham","Springvale","Glen Waverley"]},
+  {name:"Burwood Highway",lat1:-37.8500,lng1:145.0700,lat2:-37.8500,lng2:145.2000,o:"EW",region:"east",s:["Burwood","Burwood East","Glen Waverley","Wantirna South"]},
+  {name:"Highbury Road",lat1:-37.8400,lng1:145.1200,lat2:-37.8400,lng2:145.2000,o:"EW",region:"east",s:["Burwood East","Wantirna South","Vermont South"]},
+  {name:"Coleman Road",lat1:-37.8600,lng1:145.1800,lat2:-37.8900,lng2:145.1800,o:"NS",region:"east",s:["Wantirna","Rowville"]},
+  {name:"Scoresby Road",lat1:-37.8750,lng1:145.2200,lat2:-37.8750,lng2:145.2600,o:"EW",region:"east",s:["Scoresby","Ferntree Gully","Bayswater North"]},
+  {name:"Eastlink Freeway",lat1:-37.7500,lng1:145.1960,lat2:-37.9800,lng2:145.2200,o:"NS",region:"east",s:["Ringwood","Scoresby","Rowville","Dandenong North"]},
+
+  // ── INNER EAST ──
+  {name:"Hoddle Street",lat1:-37.7900,lng1:144.9897,lat2:-37.8400,lng2:144.9897,o:"NS",region:"inner east",s:["Richmond","Collingwood","Abbotsford"]},
+  {name:"Punt Road",lat1:-37.8200,lng1:144.9899,lat2:-37.8600,lng2:144.9899,o:"NS",region:"inner east",s:["Richmond","Prahran","Windsor","South Yarra"]},
+  {name:"Bridge Road",lat1:-37.8187,lng1:144.9700,lat2:-37.8187,lng2:145.0200,o:"EW",region:"inner east",s:["Richmond","Hawthorn"]},
+  {name:"Swan Street",lat1:-37.8238,lng1:144.9700,lat2:-37.8238,lng2:145.0100,o:"EW",region:"inner east",s:["Richmond","Burnley"]},
+  {name:"Church Street Richmond",lat1:-37.8100,lng1:144.9988,lat2:-37.8340,lng2:144.9988,o:"NS",region:"inner east",s:["Richmond","Hawthorn"]},
+  {name:"Lennox Street Richmond",lat1:-37.8190,lng1:144.9820,lat2:-37.8190,lng2:145.0050,o:"EW",region:"inner east",s:["Richmond"]},
+  {name:"Highett Street Richmond",lat1:-37.8220,lng1:144.9820,lat2:-37.8220,lng2:145.0050,o:"EW",region:"inner east",s:["Richmond"]},
+  {name:"Burnley Street",lat1:-37.8270,lng1:144.9800,lat2:-37.8270,lng2:145.0100,o:"EW",region:"inner east",s:["Richmond","Burnley"]},
+  {name:"Barkers Road",lat1:-37.8200,lng1:145.0000,lat2:-37.8200,lng2:145.0500,o:"EW",region:"inner east",s:["Kew","Hawthorn East"]},
+  {name:"Wellington Street Collingwood",lat1:-37.8000,lng1:144.9860,lat2:-37.8150,lng2:144.9860,o:"NS",region:"inner east",s:["Collingwood","Abbotsford"]},
+  {name:"Johnston Street Abbotsford",lat1:-37.8000,lng1:144.9980,lat2:-37.8000,lng2:145.0200,o:"EW",region:"inner east",s:["Abbotsford","Clifton Hill"]},
+  {name:"Clarke Street Northcote",lat1:-37.7750,lng1:144.9990,lat2:-37.7900,lng2:144.9990,o:"NS",region:"inner east",s:["Northcote"]},
+  {name:"Yarra Boulevard",lat1:-37.8050,lng1:145.0050,lat2:-37.8200,lng2:145.0180,o:"NS",region:"inner east",s:["Kew","Richmond","Hawthorn"]},
+  {name:"Studley Park Road",lat1:-37.8100,lng1:145.0050,lat2:-37.8250,lng2:145.0200,o:"NS",region:"inner east",s:["Kew","Collingwood"]},
+
+  // ── SOUTH ──
+  {name:"St Kilda Road",lat1:-37.8220,lng1:144.9741,lat2:-37.8720,lng2:144.9741,o:"NS",region:"south",s:["Melbourne","South Yarra","St Kilda","Albert Park"]},
+  {name:"Fitzroy Street St Kilda",lat1:-37.8550,lng1:144.9792,lat2:-37.8743,lng2:144.9792,o:"NS",region:"south",s:["St Kilda","St Kilda East"]},
+  {name:"Inkerman Street",lat1:-37.8660,lng1:144.9700,lat2:-37.8660,lng2:145.0100,o:"EW",region:"south",s:["St Kilda","Elwood","St Kilda East"]},
+  {name:"Balaclava Road",lat1:-37.8680,lng1:144.9700,lat2:-37.8680,lng2:145.0200,o:"EW",region:"south",s:["Balaclava","St Kilda East","Caulfield North"]},
+  {name:"Beaconsfield Parade",lat1:-37.8480,lng1:144.9350,lat2:-37.8720,lng2:144.9720,o:"EW",region:"south",s:["Port Melbourne","St Kilda","Elwood","Albert Park"]},
+  {name:"Bay Street Port Melbourne",lat1:-37.8200,lng1:144.9440,lat2:-37.8500,lng2:144.9440,o:"NS",region:"south",s:["Port Melbourne","South Melbourne"]},
+  {name:"Nepean Highway",lat1:-37.8800,lng1:145.0230,lat2:-38.1500,lng2:145.1200,o:"NS",region:"south",s:["Moorabbin","Cheltenham","Mentone","Frankston"]},
+  {name:"South Road Moorabbin",lat1:-37.9265,lng1:145.0000,lat2:-37.9265,lng2:145.1000,o:"EW",region:"south",s:["Moorabbin","Bentleigh East"]},
+  {name:"Centre Road",lat1:-37.9093,lng1:145.0000,lat2:-37.9093,lng2:145.0700,o:"EW",region:"south",s:["Bentleigh","East Bentleigh","Bentleigh East"]},
+  {name:"North Road",lat1:-37.8830,lng1:144.9800,lat2:-37.8830,lng2:145.0600,o:"EW",region:"south",s:["Brighton East","Ormond","Bentleigh"]},
+  {name:"Tucker Road",lat1:-37.9000,lng1:144.9800,lat2:-37.9000,lng2:145.0600,o:"EW",region:"south",s:["Bentleigh East","Ormond"]},
+  {name:"Alma Road",lat1:-37.8640,lng1:144.9700,lat2:-37.8640,lng2:145.0200,o:"EW",region:"south",s:["St Kilda East","Caulfield North"]},
+  {name:"Hawthorn Road",lat1:-37.8600,lng1:145.0060,lat2:-37.8900,lng2:145.0060,o:"NS",region:"south",s:["Caulfield North","Caulfield South","Malvern East"]},
+  {name:"Glen Eira Road",lat1:-37.8700,lng1:144.9990,lat2:-37.9000,lng2:144.9990,o:"NS",region:"south",s:["Ripponlea","Elsternwick","Caulfield North","Carnegie"]},
+  {name:"Brighton Road",lat1:-37.8950,lng1:144.9950,lat2:-37.9200,lng2:144.9950,o:"NS",region:"south",s:["Elwood","Brighton","Brighton East"]},
+  {name:"New Street Brighton",lat1:-37.9050,lng1:144.9850,lat2:-37.9050,lng2:145.0100,o:"EW",region:"south",s:["Brighton","Brighton East"]},
+  {name:"Middle Brighton Road",lat1:-37.9130,lng1:144.9900,lat2:-37.9130,lng2:145.0200,o:"EW",region:"south",s:["Brighton","Hampton"]},
+  {name:"Hampton Street",lat1:-37.9230,lng1:144.9900,lat2:-37.9500,lng2:144.9900,o:"NS",region:"south",s:["Hampton","Moorabbin","Highett"]},
+  {name:"Highett Road",lat1:-37.9380,lng1:144.9800,lat2:-37.9380,lng2:145.0400,o:"EW",region:"south",s:["Highett","Moorabbin","Cheltenham"]},
+  {name:"Balcombe Road",lat1:-37.9200,lng1:145.0400,lat2:-37.9600,lng2:145.0400,o:"NS",region:"south",s:["Mentone","Parkdale","Cheltenham","Moorabbin"]},
+  {name:"Chesterville Road",lat1:-37.9300,lng1:145.0500,lat2:-37.9700,lng2:145.0500,o:"NS",region:"south",s:["Cheltenham","Moorabbin","Mentone","Heatherton"]},
+  {name:"Lower Dandenong Road",lat1:-37.9650,lng1:145.0200,lat2:-37.9650,lng2:145.1500,o:"EW",region:"south",s:["Mentone","Parkdale","Mordialloc","Braeside"]},
+  {name:"Boundary Road Chelsea",lat1:-38.0350,lng1:145.1050,lat2:-38.0350,lng2:145.1600,o:"EW",region:"south",s:["Bonbeach","Chelsea","Chelsea Heights"]},
+  {name:"Station Street Chelsea",lat1:-38.0400,lng1:145.1200,lat2:-38.0700,lng2:145.1200,o:"NS",region:"south",s:["Chelsea","Bonbeach","Carrum"]},
+  {name:"Old Dandenong Road",lat1:-37.9700,lng1:145.1000,lat2:-37.9700,lng2:145.2000,o:"EW",region:"south",s:["Heatherton","Dingley Village","Braeside"]},
+  {name:"Warrigal Road",lat1:-37.8800,lng1:145.0822,lat2:-37.9500,lng2:145.0822,o:"NS",region:"south",s:["Malvern East","Oakleigh","Moorabbin","Cheltenham"]},
+  {name:"Cobar Street",lat1:-37.9080,lng1:145.0600,lat2:-37.9080,lng2:145.0900,o:"EW",region:"south",s:["Oakleigh","Oakleigh East"]},
+  {name:"Portarlington Road Altona",lat1:-37.8750,lng1:144.8800,lat2:-37.8750,lng2:144.9200,o:"EW",region:"south",s:["Altona","Seaholme"]},
 
   // ── SOUTH EAST ──
-  {name:"High Street Armadale",lat:-37.8543,lng:145.0132,o:"EW",region:"south east",m3:false,s:["Armadale","Malvern","Glen Iris","Ashburton"]},
-  {name:"Warrigal Road",lat:-37.9013,lng:145.0822,o:"NS",region:"south east",m3:false,s:["Malvern East","Oakleigh","Moorabbin","Cheltenham"]},
-  {name:"Springvale Road",lat:-37.9388,lng:145.1502,o:"NS",region:"south east",m3:false,s:["Springvale","Mulgrave","Glen Waverley","Dingley Village"]},
-  {name:"Princes Highway",lat:-37.9872,lng:145.1622,o:"EW",region:"south east",m3:false,s:["Dandenong","Noble Park","Springvale","Hallam"]},
-  {name:"Frankston-Dandenong Road",lat:-37.9972,lng:145.2102,o:"NS",region:"south east",m3:false,s:["Dandenong","Keysborough","Springvale","Hallam"]},
-  {name:"Clayton Road",lat:-37.9180,lng:145.1220,o:"EW",region:"south east",m3:false,s:["Clayton","Clayton South","Clarinda"]},
-  {name:"Wellington Road",lat:-37.9030,lng:145.1590,o:"NS",region:"south east",m3:false,s:["Mulgrave","Rowville","Noble Park North"]},
-  {name:"Princes Freeway",lat:-37.9380,lng:145.3100,o:"EW",region:"south east",m3:false,s:["Dandenong South","Hallam","Narre Warren"]},
-  {name:"Narre Warren-Cranbourne Road",lat:-38.0200,lng:145.3100,o:"NS",region:"south east",m3:false,s:["Narre Warren","Cranbourne","Cranbourne North"]},
-  {name:"Cranbourne Road",lat:-38.0600,lng:145.2700,o:"EW",region:"south east",m3:false,s:["Cranbourne","Cranbourne East","Botanic Ridge"]},
+  {name:"Chapel Street",lat1:-37.8300,lng1:144.9952,lat2:-37.8750,lng2:144.9952,o:"NS",region:"south east",s:["South Yarra","Prahran","Windsor"]},
+  {name:"Toorak Road",lat1:-37.8413,lng1:144.9600,lat2:-37.8413,lng2:145.0700,o:"EW",region:"south east",s:["South Yarra","Toorak","Camberwell"]},
+  {name:"Commercial Road",lat1:-37.8479,lng1:144.9700,lat2:-37.8479,lng2:145.0100,o:"EW",region:"south east",s:["Prahran","South Yarra"]},
+  {name:"High Street Prahran",lat1:-37.8550,lng1:144.9700,lat2:-37.8550,lng2:145.0300,o:"EW",region:"south east",s:["Prahran","Windsor","Armadale"]},
+  {name:"Dandenong Road",lat1:-37.8774,lng1:144.9800,lat2:-37.8774,lng2:145.1000,o:"EW",region:"south east",s:["Malvern East","Caulfield","Carnegie","Murrumbeena"]},
+  {name:"Punt Road South Yarra",lat1:-37.8400,lng1:144.9899,lat2:-37.8600,lng2:144.9899,o:"NS",region:"south east",s:["South Yarra","Windsor"]},
+  {name:"High Street Armadale",lat1:-37.8543,lng1:144.9900,lat2:-37.8543,lng2:145.0500,o:"EW",region:"south east",s:["Armadale","Malvern","Glen Iris","Ashburton"]},
+  {name:"Malvern Road",lat1:-37.8500,lng1:145.0000,lat2:-37.8500,lng2:145.0700,o:"EW",region:"south east",s:["Malvern","Malvern East","Glen Iris"]},
+  {name:"Springvale Road Mulgrave",lat1:-37.8800,lng1:145.1502,lat2:-37.9800,lng2:145.1502,o:"NS",region:"south east",s:["Springvale","Mulgrave","Glen Waverley","Dingley Village"]},
+  {name:"Princes Highway",lat1:-37.9872,lng1:145.0500,lat2:-37.9872,lng2:145.2500,o:"EW",region:"south east",s:["Dandenong","Noble Park","Springvale","Hallam"]},
+  {name:"Frankston-Dandenong Road",lat1:-37.9500,lng1:145.2102,lat2:-38.1000,lng2:145.2102,o:"NS",region:"south east",s:["Dandenong","Keysborough","Springvale","Hallam"]},
+  {name:"Clayton Road",lat1:-37.9180,lng1:145.0800,lat2:-37.9180,lng2:145.1700,o:"EW",region:"south east",s:["Clayton","Clayton South","Clarinda"]},
+  {name:"Wellington Road Mulgrave",lat1:-37.8700,lng1:145.1590,lat2:-37.9400,lng2:145.1590,o:"NS",region:"south east",s:["Mulgrave","Rowville","Noble Park North"]},
+  {name:"Princes Freeway",lat1:-37.9380,lng1:145.2000,lat2:-37.9380,lng2:145.5000,o:"EW",region:"south east",s:["Dandenong South","Hallam","Narre Warren"]},
+  {name:"Narre Warren-Cranbourne Road",lat1:-38.0200,lng1:145.2800,lat2:-38.0200,lng2:145.3400,o:"NS",region:"south east",s:["Narre Warren","Cranbourne","Cranbourne North"]},
+  {name:"Cranbourne Road",lat1:-38.0600,lng1:145.2400,lat2:-38.0600,lng2:145.3200,o:"EW",region:"south east",s:["Cranbourne","Cranbourne East","Botanic Ridge"]},
+  {name:"Springvale Road Glen Waverley",lat1:-37.8700,lng1:145.1502,lat2:-37.9000,lng2:145.1502,o:"NS",region:"south east",s:["Glen Waverley","Mulgrave"]},
+  {name:"Ferntree Gully Road Scoresby",lat1:-37.8800,lng1:145.1800,lat2:-37.8800,lng2:145.2600,o:"EW",region:"south east",s:["Scoresby","Ferntree Gully","Wantirna South"]},
+  {name:"Hallam Road",lat1:-38.0000,lng1:145.2600,lat2:-38.0200,lng2:145.2600,o:"NS",region:"south east",s:["Hallam","Narre Warren"]},
+  {name:"Pound Road",lat1:-38.0500,lng1:145.2800,lat2:-38.0500,lng2:145.3600,o:"EW",region:"south east",s:["Narre Warren","Berwick","Cranbourne North"]},
+  {name:"Clyde Road Berwick",lat1:-38.0300,lng1:145.3200,lat2:-38.0600,lng2:145.3500,o:"NS",region:"south east",s:["Berwick","Clyde North","Cranbourne North"]},
+  {name:"Berwick-Cranbourne Road",lat1:-38.0400,lng1:145.3000,lat2:-38.0700,lng2:145.3400,o:"NS",region:"south east",s:["Berwick","Cranbourne North","Clyde"]},
+  {name:"Princes Freeway Pakenham",lat1:-38.0500,lng1:145.4000,lat2:-38.0700,lng2:145.5000,o:"EW",region:"south east",s:["Officer","Pakenham","Beaconsfield"]},
+  {name:"High Street Glen Iris",lat1:-37.8600,lng1:145.0500,lat2:-37.8850,lng2:145.0500,o:"NS",region:"south east",s:["Glen Iris","Malvern East","Ashburton"]},
+  {name:"Camberwell Road",lat1:-37.8400,lng1:145.0500,lat2:-37.8650,lng2:145.0500,o:"NS",region:"south east",s:["Camberwell","Hawthorn East","Surrey Hills"]},
+  {name:"Burke Road Camberwell",lat1:-37.8200,lng1:145.0672,lat2:-37.8500,lng2:145.0672,o:"NS",region:"south east",s:["Camberwell","Canterbury","Glen Iris"]},
+  {name:"Mont Albert Road",lat1:-37.8250,lng1:145.0600,lat2:-37.8250,lng2:145.1100,o:"EW",region:"south east",s:["Canterbury","Surrey Hills","Mont Albert","Box Hill South"]},
+  {name:"Riversdale Road",lat1:-37.8350,lng1:145.0100,lat2:-37.8350,lng2:145.1100,o:"EW",region:"south east",s:["Hawthorn East","Camberwell","Box Hill South","Burwood"]},
+  {name:"Murrumbeena Road",lat1:-37.8950,lng1:145.0500,lat2:-37.9100,lng2:145.0500,o:"NS",region:"south east",s:["Murrumbeena","Carnegie","Ormond"]},
+  {name:"Koornang Road",lat1:-37.8950,lng1:145.0650,lat2:-37.9150,lng2:145.0650,o:"NS",region:"south east",s:["Carnegie","Murrumbeena","Bentleigh East"]},
+  {name:"Poath Road",lat1:-37.9000,lng1:145.0300,lat2:-37.9000,lng2:145.0700,o:"EW",region:"south east",s:["Murrumbeena","Carnegie"]},
+  {name:"Oakleigh Road",lat1:-37.8900,lng1:145.0800,lat2:-37.9100,lng2:145.0800,o:"NS",region:"south east",s:["Oakleigh","Carnegie","Malvern East"]},
+  {name:"Waverley Road",lat1:-37.8750,lng1:145.0700,lat2:-37.8750,lng2:145.1600,o:"EW",region:"south east",s:["Malvern East","Oakleigh East","Glen Waverley"]},
 
   // ── WEST ──
-  {name:"Footscray Road",lat:-37.8049,lng:144.9193,o:"EW",region:"west",m3:false,s:["West Melbourne","Footscray","Docklands"]},
-  {name:"Geelong Road",lat:-37.7992,lng:144.8012,o:"EW",region:"west",m3:false,s:["Footscray","Sunshine","Deer Park","Ardeer"]},
-  {name:"Ballarat Road",lat:-37.7772,lng:144.7892,o:"EW",region:"west",m3:false,s:["Sunshine","St Albans","Deer Park","Cairnlea"]},
-  {name:"Western Ring Road",lat:-37.8192,lng:144.8172,o:"NS",region:"west",m3:false,s:["Laverton North","Altona North","Sunshine North","Tottenham"]},
-  {name:"Sunshine Road",lat:-37.7950,lng:144.8350,o:"EW",region:"west",m3:false,s:["Sunshine","Sunshine West","Braybrook"]},
-  {name:"Williamstown Road",lat:-37.8430,lng:144.8680,o:"EW",region:"west",m3:false,s:["Seddon","Kingsville","Newport","Williamstown"]},
-  {name:"Melbourne Road Williamstown",lat:-37.8580,lng:144.8890,o:"NS",region:"west",m3:false,s:["Williamstown","Newport","Altona"]},
-  {name:"Millers Road",lat:-37.7950,lng:144.8750,o:"NS",region:"west",m3:false,s:["Altona North","Brooklyn","Laverton North"]},
-  {name:"Kororoit Creek Road",lat:-37.7700,lng:144.8150,o:"EW",region:"west",m3:false,s:["Sunshine","Taylors Lakes","Keilor Downs","Derrimut"]},
-  {name:"Sydenham Road",lat:-37.7280,lng:144.7670,o:"NS",region:"west",m3:false,s:["Sydenham","Taylors Lakes","Keilor"]},
-  {name:"Melton Highway",lat:-37.7050,lng:144.7870,o:"EW",region:"west",m3:false,s:["Sydenham","Watergardens","Taylors Hill","Melton East"]},
-  {name:"Western Highway",lat:-37.7830,lng:144.6900,o:"EW",region:"west",m3:false,s:["Deer Park","Caroline Springs","Rockbank","Melton"]},
-  {name:"Old Calder Highway",lat:-37.6980,lng:144.8230,o:"NS",region:"west",m3:false,s:["Keilor","Tullamarine","Bulla"]},
+  {name:"Footscray Road",lat1:-37.8049,lng1:144.8900,lat2:-37.8049,lng2:144.9500,o:"EW",region:"west",s:["West Melbourne","Footscray","Docklands"]},
+  {name:"Geelong Road",lat1:-37.7992,lng1:144.7500,lat2:-37.7992,lng2:144.8700,o:"EW",region:"west",s:["Footscray","Sunshine","Deer Park","Ardeer"]},
+  {name:"Ballarat Road",lat1:-37.7772,lng1:144.7500,lat2:-37.7772,lng2:144.8700,o:"EW",region:"west",s:["Sunshine","St Albans","Deer Park","Cairnlea"]},
+  {name:"Western Ring Road",lat1:-37.7700,lng1:144.8172,lat2:-37.8700,lng2:144.8172,o:"NS",region:"west",s:["Laverton North","Altona North","Sunshine North","Tottenham"]},
+  {name:"Sunshine Road",lat1:-37.7950,lng1:144.8000,lat2:-37.7950,lng2:144.8700,o:"EW",region:"west",s:["Sunshine","Sunshine West","Braybrook"]},
+  {name:"Williamstown Road",lat1:-37.8430,lng1:144.8400,lat2:-37.8430,lng2:144.9000,o:"EW",region:"west",s:["Seddon","Kingsville","Newport","Williamstown"]},
+  {name:"Melbourne Road Williamstown",lat1:-37.8400,lng1:144.8890,lat2:-37.8800,lng2:144.8890,o:"NS",region:"west",s:["Williamstown","Newport","Altona"]},
+  {name:"Millers Road",lat1:-37.7700,lng1:144.8750,lat2:-37.8200,lng2:144.8750,o:"NS",region:"west",s:["Altona North","Brooklyn","Laverton North"]},
+  {name:"Kororoit Creek Road",lat1:-37.7700,lng1:144.7800,lat2:-37.7700,lng2:144.8700,o:"EW",region:"west",s:["Sunshine","Taylors Lakes","Keilor Downs","Derrimut"]},
+  {name:"Sydenham Road",lat1:-37.7000,lng1:144.7670,lat2:-37.7600,lng2:144.7670,o:"NS",region:"west",s:["Sydenham","Taylors Lakes","Keilor"]},
+  {name:"Melton Highway",lat1:-37.7050,lng1:144.7500,lat2:-37.7050,lng2:144.8300,o:"EW",region:"west",s:["Sydenham","Watergardens","Taylors Hill","Melton East"]},
+  {name:"Western Highway",lat1:-37.7830,lng1:144.6000,lat2:-37.7830,lng2:144.8000,o:"EW",region:"west",s:["Deer Park","Caroline Springs","Rockbank","Melton"]},
+  {name:"Old Calder Highway",lat1:-37.6700,lng1:144.8230,lat2:-37.7300,lng2:144.8230,o:"NS",region:"west",s:["Keilor","Tullamarine","Bulla"]},
+  {name:"Boundary Road Sunshine",lat1:-37.8000,lng1:144.8900,lat2:-37.8700,lng2:144.9200,o:"NS",region:"west",s:["Maribyrnong","Maidstone","Sunshine North"]},
+  {name:"Braybrook Street",lat1:-37.7950,lng1:144.8600,lat2:-37.8150,lng2:144.8600,o:"NS",region:"west",s:["Braybrook","Footscray","Maribyrnong"]},
+  {name:"Raleigh Road Maribyrnong",lat1:-37.7750,lng1:144.8900,lat2:-37.7950,lng2:144.8900,o:"NS",region:"west",s:["Maribyrnong","Avondale Heights"]},
+  {name:"Hampstead Road",lat1:-37.7800,lng1:144.8600,lat2:-37.7800,lng2:144.9100,o:"EW",region:"west",s:["Maidstone","Moonee Ponds","Maribyrnong"]},
+  {name:"Churchill Avenue",lat1:-37.7650,lng1:144.8700,lat2:-37.7650,lng2:144.9200,o:"EW",region:"west",s:["Keilor East","Avondale Heights","Niddrie"]},
+  {name:"Fullarton Road",lat1:-37.7550,lng1:144.8700,lat2:-37.7750,lng2:144.8700,o:"NS",region:"west",s:["Keilor East","Avondale Heights"]},
+  {name:"Main Road Moonee Ponds",lat1:-37.7580,lng1:144.9200,lat2:-37.7580,lng2:144.9550,o:"EW",region:"west",s:["Moonee Ponds","Essendon"]},
+  {name:"Epsom Road Ascot Vale",lat1:-37.7780,lng1:144.9100,lat2:-37.7780,lng2:144.9450,o:"EW",region:"west",s:["Ascot Vale","Moonee Ponds"]},
+  {name:"Union Road Ascot Vale",lat1:-37.7700,lng1:144.9170,lat2:-37.7900,lng2:144.9170,o:"NS",region:"west",s:["Ascot Vale","Moonee Ponds","Flemington"]},
+  {name:"Harbour Esplanade Docklands",lat1:-37.8120,lng1:144.9390,lat2:-37.8200,lng2:144.9390,o:"NS",region:"west",s:["Docklands"]},
+  {name:"Docklands Drive",lat1:-37.8150,lng1:144.9320,lat2:-37.8150,lng2:144.9490,o:"EW",region:"west",s:["Docklands"]},
+  {name:"Sayers Road",lat1:-37.8100,lng1:144.7600,lat2:-37.8100,lng2:144.8200,o:"EW",region:"west",s:["Hoppers Crossing","Truganina","Laverton North"]},
+  {name:"Palmers Road",lat1:-37.8300,lng1:144.7800,lat2:-37.8300,lng2:144.8400,o:"EW",region:"west",s:["Hoppers Crossing","Werribee","Truganina"]},
+  {name:"Princes Freeway West",lat1:-37.8100,lng1:144.6000,lat2:-37.8100,lng2:144.9000,o:"EW",region:"west",s:["Hoppers Crossing","Werribee","Laverton","Altona"]},
+  {name:"Cherry Street Werribee",lat1:-37.8950,lng1:144.6500,lat2:-37.8950,lng2:144.7000,o:"EW",region:"west",s:["Werribee"]},
+  {name:"Heaths Road Hoppers Crossing",lat1:-37.8800,lng1:144.7000,lat2:-37.8800,lng2:144.7800,o:"EW",region:"west",s:["Hoppers Crossing","Wyndham Vale"]},
+  {name:"Hogans Road",lat1:-37.8500,lng1:144.7200,lat2:-37.8700,lng2:144.7200,o:"NS",region:"west",s:["Hoppers Crossing","Wyndham Vale"]},
+  {name:"Skeleton Creek Road",lat1:-37.8200,lng1:144.7600,lat2:-37.8500,lng2:144.7600,o:"NS",region:"west",s:["Laverton North","Truganina","Williams Landing"]},
+  {name:"Aviation Road",lat1:-37.8650,lng1:144.7500,lat2:-37.8650,lng2:144.8200,o:"EW",region:"west",s:["Laverton","Point Cook","Williams Landing"]},
+  {name:"Point Cook Road",lat1:-37.8800,lng1:144.7500,lat2:-37.9200,lng2:144.7500,o:"NS",region:"west",s:["Point Cook","Williams Landing"]},
 
-  // ── MIXED / ARTERIALS ──
-  {name:"Boundary Road",lat:-37.8490,lng:144.9200,o:"NS",region:"west",m3:false,s:["Maribyrnong","Maidstone","Sunshine North"]},
-  {name:"Racecourse Road",lat:-37.7893,lng:144.9410,o:"EW",region:"inner north",m3:true,s:["Flemington","North Melbourne"]},
-  {name:"Mt Alexander Road",lat:-37.7630,lng:144.9410,o:"NS",region:"north",m3:false,s:["Flemington","Moonee Ponds","Essendon","Aberfeldie"]},
-  {name:"Keilor Road",lat:-37.7500,lng:144.8890,o:"NS",region:"north",m3:false,s:["Essendon North","Keilor East","Niddrie"]},
-  {name:"Tucker Road",lat:-37.9000,lng:145.0230,o:"EW",region:"south",m3:false,s:["Bentleigh East","Ormond"]},
-  {name:"North Road",lat:-37.8830,lng:145.0100,o:"EW",region:"south",m3:false,s:["Brighton East","Ormond","Bentleigh"]},
-  {name:"Bay Street Port Melbourne",lat:-37.8360,lng:144.9440,o:"NS",region:"south",m3:false,s:["Port Melbourne","South Melbourne"]},
-  {name:"Beaconsfield Parade",lat:-37.8580,lng:144.9540,o:"EW",region:"south",m3:false,s:["Port Melbourne","St Kilda","Elwood","Albert Park"]},
-  {name:"Hawthorn Road",lat:-37.8730,lng:145.0060,o:"NS",region:"south east",m3:false,s:["Caulfield North","Caulfield South","Malvern East"]},
-  {name:"Balaclava Road",lat:-37.8680,lng:144.9940,o:"EW",region:"south",m3:false,s:["Balaclava","St Kilda East","Caulfield North"]},
-  {name:"Boronia Road",lat:-37.8590,lng:145.2330,o:"EW",region:"east",m3:false,s:["Boronia","Ferntree Gully","Upper Ferntree Gully"]},
+  // ── FRANKSTON / MORNINGTON ──
+  {name:"Frankston-Flinders Road",lat1:-38.1000,lng1:145.1200,lat2:-38.2000,lng2:145.1200,o:"NS",region:"south",s:["Frankston","Baxter","Somerville","Tyabb"]},
+  {name:"Cranbourne-Frankston Road",lat1:-38.0800,lng1:145.2500,lat2:-38.1400,lng2:145.1800,o:"NS",region:"south",s:["Langwarrin","Frankston South","Frankston"]},
+  {name:"Robinsons Road Frankston",lat1:-38.1400,lng1:145.1500,lat2:-38.1400,lng2:145.2200,o:"EW",region:"south",s:["Frankston","Frankston North","Carrum Downs"]},
+  {name:"Dandenong-Hastings Road",lat1:-38.0800,lng1:145.2500,lat2:-38.1500,lng2:145.2500,o:"NS",region:"south",s:["Carrum Downs","Seaford","Langwarrin","Skye"]},
 ];
 
-// All unique suburb names for the suburb picker
-const ALL_SUBURBS = [...new Set(STREETS.flatMap(s=>s.s))].sort();
+// Compute midpoint for each street
+const STREETS = RAW_STREETS.map(r => ({
+  ...r,
+  lat: (r.lat1 + r.lat2) / 2,
+  lng: (r.lng1 + r.lng2) / 2,
+}));
 
-// All street names usable as reference roads in Q2 (same list, for simplicity)
-const ALL_REF_ROADS = STREETS.map(s=>s.name).sort();
+const ALL_SUBURBS = [...new Set(STREETS.flatMap(s=>s.s))].sort();
+// Build a fast lookup: normalised name → street object
+const STREET_MAP = {};
+STREETS.forEach(s => { STREET_MAP[s.name.toLowerCase()] = s; });
 
 // ══════════════════════════════════════
 // STATE
 // ══════════════════════════════════════
-let currentStreet=null,currentScore=10000,usedQ=new Set();
-let currentUser=null,gameMap=null,resultMap=null;
-let roadPickerCallback=null;
+let currentStreet = null, currentScore = 10000;
+let currentUser = null, gameMap = null, resultMap = null;
+let lastStreetName = null;
+let popupRoad = null;   // { name, inDB, dbEntry, latlng }
+let popupSuburb = null; // { name, latlng }
+let highlightLayer = null; // polyline for hovered/selected road
+let guessHighlights = []; // yellow polylines for DB roads
 
 // ══════════════════════════════════════
-// STORAGE
+// STORAGE / AUTH
 // ══════════════════════════════════════
-const getUsers=()=>JSON.parse(localStorage.getItem('msg_users')||'{}');
-const saveUsers=u=>localStorage.setItem('msg_users',JSON.stringify(u));
-const getLB=()=>JSON.parse(localStorage.getItem('msg_lb')||'[]');
-const saveLB=lb=>localStorage.setItem('msg_lb',JSON.stringify(lb));
+const getUsers = () => JSON.parse(localStorage.getItem('msg_users')||'{}');
+const saveUsers = u => localStorage.setItem('msg_users', JSON.stringify(u));
+const getLB = () => JSON.parse(localStorage.getItem('msg_lb')||'[]');
+const saveLB = lb => localStorage.setItem('msg_lb', JSON.stringify(lb));
 
-function updateHiScore(username,score){
-  if(!username||username==='Guest') return false;
-  const lb=getLB(),idx=lb.findIndex(r=>r.name===username);
+function updateHiScore(username, score){
+  if(!username || username==='Guest') return false;
+  const lb=getLB(), idx=lb.findIndex(r=>r.name===username);
   let isNew=false;
   if(idx===-1){lb.push({name:username,best:score,games:1});isNew=true;}
   else{lb[idx].games++;if(score>lb[idx].best){lb[idx].best=score;isNew=true;}}
@@ -445,30 +597,33 @@ function updateHiScore(username,score){
   return isNew;
 }
 
-// ══════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════
 function switchTab(t){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));
   document.getElementById('panel-login').classList.toggle('active',t==='login');
   document.getElementById('panel-register').classList.toggle('active',t==='register');
 }
 function doLogin(){
-  const u=document.getElementById('login-user').value.trim(),p=document.getElementById('login-pass').value,msg=document.getElementById('login-msg'),users=getUsers();
+  const u=document.getElementById('login-user').value.trim(),
+        p=document.getElementById('login-pass').value,
+        msg=document.getElementById('login-msg'),
+        users=getUsers();
   if(!u||!p){msg.textContent='Please fill in all fields.';return;}
   if(!users[u]||users[u].pw!==btoa(p)){msg.textContent='Incorrect username or password.';return;}
   msg.textContent='';currentUser=u;startGame();
 }
 function doRegister(){
-  const u=document.getElementById('reg-user').value.trim(),p=document.getElementById('reg-pass').value,p2=document.getElementById('reg-pass2').value,msg=document.getElementById('reg-msg');
+  const u=document.getElementById('reg-user').value.trim(),
+        p=document.getElementById('reg-pass').value,
+        p2=document.getElementById('reg-pass2').value,
+        msg=document.getElementById('reg-msg');
   if(!u||!p){msg.textContent='Please fill in all fields.';return;}
   if(p!==p2){msg.textContent='Passwords do not match.';return;}
   if(u.length<3){msg.textContent='Username must be at least 3 characters.';return;}
   const users=getUsers();
   if(users[u]){msg.textContent='Username already taken.';return;}
   users[u]={pw:btoa(p)};saveUsers(users);
-  msg.style.color='#4A9B8E';msg.textContent='Account created! Logging in…';
-  currentUser=u;setTimeout(()=>{msg.style.color='';startGame();},700);
+  msg.style.color='var(--teal)';msg.textContent='Account created! Logging in…';
+  currentUser=u;setTimeout(()=>{msg.style.color='';startGame();},600);
 }
 function playAsGuest(){currentUser='Guest';startGame();}
 
@@ -479,17 +634,15 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+id).classList.add('active');
   if(id==='leaderboard') renderLB();
+  if(id==='game' && gameMap) setTimeout(()=>gameMap.invalidateSize(),100);
 }
 
-// ══════════════════════════════════════
-// LEADERBOARD
-// ══════════════════════════════════════
 function renderLB(){
-  const lb=getLB(),el=document.getElementById('lb-list');
-  if(!lb.length){el.innerHTML='<div class="lb-empty">No scores yet — be the first!</div>';return;}
-  const m=['gold','silver','bronze'];
+  const lb=getLB(), el=document.getElementById('lb-list');
+  if(!lb.length){el.innerHTML='<div class="lb-empty">No scores yet!</div>';return;}
+  const medals=['gold','silver','bronze'];
   el.innerHTML=lb.slice(0,15).map((r,i)=>`
-    <div class="lb-row ${m[i]||''}">
+    <div class="lb-row ${medals[i]||''}">
       <div class="lb-rank">#${i+1}</div>
       <div class="lb-name">${r.name}</div>
       <div class="lb-score">${r.best.toLocaleString()}</div>
@@ -498,339 +651,349 @@ function renderLB(){
 }
 
 // ══════════════════════════════════════
+// PANEL DRAG
+// ══════════════════════════════════════
+const PEEK = 130;
+let panelOpen = true;
+
+function setPanelHeight(h){
+  const p=document.getElementById('game-panel');
+  p.style.height=h+'px';
+  document.getElementById('map-hints').style.bottom=(h+6)+'px';
+}
+
+(function initPanelDrag(){
+  let startY, startH, dragging=false;
+  function onStart(e){
+    dragging=true; startY=(e.touches?e.touches[0]:e).clientY;
+    startH=document.getElementById('game-panel').offsetHeight;
+    document.getElementById('game-panel').style.transition='none';
+  }
+  function onMove(e){
+    if(!dragging)return; e.preventDefault();
+    const y=(e.touches?e.touches[0]:e).clientY;
+    const newH=Math.max(PEEK,Math.min(window.innerHeight*.85,startH+(startY-y)));
+    setPanelHeight(newH);
+  }
+  function onEnd(){
+    if(!dragging)return; dragging=false;
+    document.getElementById('game-panel').style.transition='height .25s ease';
+    const h=document.getElementById('game-panel').offsetHeight;
+    if(h < PEEK+50){ setPanelHeight(PEEK); panelOpen=false; }
+    else panelOpen=true;
+  }
+  const handle=document.getElementById('panel-handle');
+  handle.addEventListener('touchstart',onStart,{passive:true});
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('touchend',onEnd);
+  handle.addEventListener('mousedown',onStart);
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onEnd);
+})();
+
+function switchPanelTab(name){
+  document.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('ptab-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(!panelOpen){ setPanelHeight(window.innerHeight*.5); panelOpen=true; }
+}
+
+// ══════════════════════════════════════
 // GAME START
 // ══════════════════════════════════════
-let lastStreetName = null;
-
 function startGame(){
-  // Pick a random street, but not the same as last time
   let pick;
-  do { pick = STREETS[Math.floor(Math.random()*STREETS.length)]; }
-  while(STREETS.length > 1 && pick.name === lastStreetName);
-  currentStreet = pick;
-  lastStreetName = pick.name;
-
-  currentScore=10000;usedQ=new Set();
-
+  do{ pick=STREETS[Math.floor(Math.random()*STREETS.length)]; }
+  while(STREETS.length>1 && pick.name===lastStreetName);
+  currentStreet=pick; lastStreetName=pick.name;
+  currentScore=10000;
   document.getElementById('hdr-player').textContent=currentUser||'Guest';
   updateScore();
-  document.querySelectorAll('.q-btn').forEach(b=>{b.disabled=false;b.classList.remove('used');});
-  document.getElementById('answer-log').innerHTML='';
+  document.querySelectorAll('.info-q-btn').forEach(b=>{b.disabled=false;});
+  document.getElementById('answer-log').innerHTML='<div class="no-answers">No answers yet — tap the map to start!</div>';
   document.getElementById('map-hints').innerHTML='';
-  document.getElementById('guess-input').value='';
-  document.getElementById('ac-list').innerHTML='';
-  document.getElementById('ac-list').classList.remove('open');
-  document.getElementById('guess-submit').disabled=false;
-
+  closePopup();
+  document.getElementById('suburb-popup').style.display='none';
   showScreen('game');
 
-  // Destroy old map first, then init fresh after screen is visible
-  if(gameMap){gameMap.remove();gameMap=null;}
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      gameMap=L.map('game-map',{zoomControl:false}).setView([-37.8136,144.9631],11);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-        attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:18
+  if(gameMap){gameMap.remove();gameMap=null;guessHighlights=[];}
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    gameMap=L.map('game-map',{zoomControl:false}).setView([-37.8136,144.9631],12);
+
+    // CartoDB Voyager — clean, road names visible, all roads present
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+      attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains:'abcd', maxZoom:20
+    }).addTo(gameMap);
+
+    L.control.zoom({position:'bottomright'}).addTo(gameMap);
+    gameMap.on('click', onMapClick);
+
+    // Draw subtle yellow highlights for our 222 DB roads so player can see them
+    guessHighlights=[];
+    STREETS.forEach(s=>{
+      const pl=L.polyline([[s.lat1,s.lng1],[s.lat2,s.lng2]],{
+        color:'#FFD54F',weight:4,opacity:.18,lineCap:'round',lineJoin:'round'
       }).addTo(gameMap);
-      L.control.zoom({position:'bottomleft'}).addTo(gameMap);
-      gameMap.on('click', handleMapClick);
-      // Q1 is free — answer it immediately
-      askQuestion(0);
+      pl._dbStreet=s;
+      pl.on('click', e=>{
+        L.DomEvent.stopPropagation(e);
+        showRoadPopup(s.name, true, s, e.latlng, e.containerPoint);
+      });
+      guessHighlights.push(pl);
     });
-  });
+
+    // Panel initial state: open to ~50% height
+    const initH=Math.round(window.innerHeight*.48);
+    document.getElementById('game-panel').style.transition='none';
+    setPanelHeight(initH); panelOpen=true;
+
+    // Ask the free question automatically
+    askInfoQ(0);
+    switchPanelTab('info');
+  }));
 }
 
 function updateScore(){
   document.getElementById('score-display').textContent=currentScore.toLocaleString();
   document.getElementById('score-fill').style.width=Math.max(0,currentScore/100)+'%';
 }
-
-// ══════════════════════════════════════
-// QUESTIONS
-// ══════════════════════════════════════
-const Q_COST=[0,500,100,250];
-const Q_LABEL=["Part of Melbourne","N–S or E–W","N/S/E/W of a road","In a suburb"];
-
-function askQuestion(idx){
-  if(idx===2){openRoadPicker();return;}
-  if(idx===3){openSuburbPicker();return;}
-  if(usedQ.has(idx)) return;
-  usedQ.add(idx);
-  const cost=Q_COST[idx];
-  if(cost>0){currentScore=Math.max(0,currentScore-cost);updateScore();flashPenalty();}
-  document.getElementById('qbtn-'+idx).disabled=true;
-  document.getElementById('qbtn-'+idx).classList.add('used');
-  const ans=getAnswer(idx,null);
-  addAnswer(`<strong>${Q_LABEL[idx]}:</strong> ${ans}`);
-  addHint(`${Q_LABEL[idx]}: ${ans}`);
-}
-
-function getAnswer(idx,param){
-  const s=currentStreet;
-  if(idx===0) return cap(s.region);
-  if(idx===1) return s.o==='NS'?'Primarily North–South':'Primarily East–West';
-  if(idx===2) return answerDirectional(param);
-  if(idx===3){
-    const hit=s.s.find(x=>x.toLowerCase()===param?.toLowerCase());
-    return hit?`Yes, it passes through ${hit}`:`No, it does not pass through ${param}`;
-  }
-  if(idx===4) return ''; // unused
-}
-
-function answerDirectional(refName){
-  if(!refName) return 'No road selected.';
-  const s=currentStreet;
-  const ref=STREETS.find(r=>r.name.toLowerCase()===refName.toLowerCase());
-  if(!ref) return `Cannot find "${refName}" in the database.`;
-
-  // Lat difference: positive = secret is SOUTH of ref (higher lat = further south in Melbourne)
-  // Lng difference: positive = secret is EAST of ref (higher lng = further east)
-  const latDiff = s.lat - ref.lat;  // +ve = secret is south
-  const lngDiff = s.lng - ref.lng;  // +ve = secret is east
-
-  // Scale differences to account for Melbourne's roughly 1.4:1 lng:lat degree ratio
-  const scaledLatDiff = Math.abs(latDiff) * 111;    // km approx
-  const scaledLngDiff = Math.abs(lngDiff) * 80;     // km approx (at Melbourne's latitude)
-
-  // Choose which axis to report based on the SECRET road's orientation:
-  // - If secret road runs NS: it spans many latitudes, so its E/W position is the useful clue
-  // - If secret road runs EW: it spans many longitudes, so its N/S position is the useful clue
-  // - If diagonal or unclear: use whichever difference is larger
-  let direction;
-  if(s.o === 'NS'){
-    // Secret is a NS road → tell E/W relative to reference
-    direction = lngDiff >= 0 ? 'East' : 'West';
-    if(scaledLngDiff < 0.5) direction = 'Almost the same east-west position as';
-    else direction = `<strong>${direction}</strong> of`;
-  } else if(s.o === 'EW'){
-    // Secret is an EW road → tell N/S relative to reference
-    direction = latDiff >= 0 ? 'South' : 'North';
-    if(scaledLatDiff < 0.5) direction = 'Almost the same north-south position as';
-    else direction = `<strong>${direction}</strong> of`;
-  } else {
-    // Diagonal road — use dominant axis
-    if(scaledLatDiff >= scaledLngDiff){
-      direction = latDiff >= 0 ? 'South' : 'North';
-      direction = `<strong>${direction}</strong> of`;
-    } else {
-      direction = lngDiff >= 0 ? 'East' : 'West';
-      direction = `<strong>${direction}</strong> of`;
-    }
-  }
-
-  return `It is ${direction} ${refName}`;
-}
-
-function answerDirectionalAxis(refName, axis){
-  const s = currentStreet;
-  const ref = STREETS.find(r=>r.name.toLowerCase()===refName.toLowerCase());
-  if(!ref) return `Cannot find "${refName}" in the database.`;
-
-  const latDiff = s.lat - ref.lat;  // +ve = secret is south (higher lat)
-  const lngDiff = s.lng - ref.lng;  // +ve = secret is east (higher lng)
-  const scaledLatDiff = Math.abs(latDiff) * 111;
-  const scaledLngDiff = Math.abs(lngDiff) * 80;
-
-  if(axis === 'NS'){
-    if(scaledLatDiff < 0.4) return `Roughly the same latitude as <strong>${refName}</strong>`;
-    const dir = latDiff > 0 ? 'South' : 'North';
-    return `<strong>${dir}</strong> of ${refName}`;
-  } else {
-    if(scaledLngDiff < 0.4) return `Roughly the same longitude as <strong>${refName}</strong>`;
-    const dir = lngDiff > 0 ? 'East' : 'West';
-    return `<strong>${dir}</strong> of ${refName}`;
-  }
-}
-
-
-// Mode: null | 'road' | 'suburb'
-let mapClickMode = null;
-
-function enableMapClick(mode){
-  mapClickMode = mode;
-  const el = document.getElementById('map-wrap');
-  el.style.cursor = 'crosshair';
-  // Show a hint overlay
-  const hint = document.getElementById('map-click-hint');
-  hint.textContent = mode === 'road' ? '👆 Tap a road on the map' : '👆 Tap a suburb on the map';
-  hint.style.display = 'block';
-}
-
-function disableMapClick(){
-  mapClickMode = null;
-  document.getElementById('map-wrap').style.cursor = '';
-  document.getElementById('map-click-hint').style.display = 'none';
-}
-
-async function handleMapClick(e){
-  if(!mapClickMode) return;
-  const {lat,lng} = e.latlng;
-  const mode = mapClickMode;
-  disableMapClick();
-
-  // Show loading in picker search box
-  if(mode === 'road'){
-    document.getElementById('rp-search').value = 'Looking up location…';
-    document.getElementById('road-picker').classList.add('open');
-  } else {
-    document.getElementById('sp-search').value = 'Looking up location…';
-    document.getElementById('suburb-picker').classList.add('open');
-  }
-
-  try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,{headers:{'Accept-Language':'en'}});
-    const data = await res.json();
-    const addr = data.address || {};
-
-    if(mode === 'road'){
-      // Try to find the road in our list
-      const roadName = addr.road || addr.pedestrian || addr.path || '';
-      const matched = STREETS.find(s=>s.name.toLowerCase().includes(roadName.toLowerCase())||roadName.toLowerCase().includes(s.name.toLowerCase().replace(/ (street|road|avenue|parade|highway|lane|drive|place|court|boulevard|crescent)/i,'')));
-      if(matched){
-        document.getElementById('rp-search').value = matched.name;
-      } else {
-        document.getElementById('rp-search').value = roadName;
-      }
-      filterRoadList();
-    } else {
-      // Find suburb
-      const sub = addr.suburb || addr.city_district || addr.town || addr.village || '';
-      document.getElementById('sp-search').value = sub;
-      filterSuburbList();
-    }
-  } catch(err){
-    if(mode === 'road'){
-      document.getElementById('rp-search').value = '';
-      filterRoadList();
-    } else {
-      document.getElementById('sp-search').value = '';
-      filterSuburbList();
-    }
-  }
-}
-
-// ── ROAD PICKER (for Q2) ──
-function openRoadPicker(){
-  disableMapClick();
-  pendingRoadName = null;
-  document.getElementById('rp-step1').style.display = 'block';
-  document.getElementById('rp-step2').style.display = 'none';
-  document.getElementById('rp-search').value='';
-  filterRoadList();
-  document.getElementById('road-picker').classList.add('open');
-}
-function closeRoadPicker(){
-  document.getElementById('road-picker').classList.remove('open');
-  document.getElementById('rp-step1').style.display = 'block';
-  document.getElementById('rp-step2').style.display = 'none';
-  pendingRoadName = null;
-}
-function filterRoadList(){
-  const q=document.getElementById('rp-search').value.toLowerCase();
-  const filtered=ALL_REF_ROADS.filter(r=>r.toLowerCase().includes(q)&&r.toLowerCase()!==currentStreet.name.toLowerCase());
-  document.getElementById('rp-list').innerHTML=filtered.map(r=>`<div class="rp-item" onclick="pickRoad('${r.replace(/'/g,"\\'")}')">📍 ${r}</div>`).join('');
-}
-let pendingRoadName = null;
-
-function pickRoad(name){
-  // Move to step 2 — axis selection
-  pendingRoadName = name;
-  document.getElementById('rp-step1').style.display = 'none';
-  document.getElementById('rp-step2').style.display = 'block';
-  document.getElementById('rp-step2-title').textContent = name;
-  document.getElementById('rp-step2-sub').textContent = 'Is the secret road north/south of it, or east/west of it?';
-}
-
-function backToRoadStep1(){
-  pendingRoadName = null;
-  document.getElementById('rp-step2').style.display = 'none';
-  document.getElementById('rp-step1').style.display = 'block';
-}
-
-function confirmRoadAxis(axis){
-  const name = pendingRoadName;
-  pendingRoadName = null;
-  closeRoadPicker();
-  currentScore=Math.max(0,currentScore-Q_COST[2]);
-  updateScore();flashPenalty();
-  const ans = answerDirectionalAxis(name, axis);
-  const axisLabel = axis === 'NS' ? 'N or S' : 'E or W';
-  addAnswer(`<strong>${axisLabel} of ${name}:</strong> ${ans}`);
-  addHint(`${axisLabel} of ${name}: ${ans.replace(/<[^>]+>/g,'')}`);
-}
-
-// ── SUBURB PICKER (for Q3) ──
-function openSuburbPicker(){
-  disableMapClick();
-  document.getElementById('sp-search').value='';
-  filterSuburbList();
-  document.getElementById('suburb-picker').classList.add('open');
-}
-function closeSuburbPicker(){document.getElementById('suburb-picker').classList.remove('open');}
-function filterSuburbList(){
-  const q=document.getElementById('sp-search').value.toLowerCase();
-  const filtered=ALL_SUBURBS.filter(s=>s.toLowerCase().includes(q));
-  document.getElementById('sp-list').innerHTML=filtered.map(s=>`<div class="rp-item" onclick="pickSuburb('${s.replace(/'/g,"\\'")}')">🏘 ${s}</div>`).join('');
-}
-function pickSuburb(name){
-  closeSuburbPicker();
-  currentScore=Math.max(0,currentScore-Q_COST[3]);
-  updateScore();flashPenalty();
-  const ans=getAnswer(3,name);
-  addAnswer(`<strong>Suburb — ${name}:</strong> ${ans}`);
-  addHint(`${name}: ${ans.length>40?ans.slice(0,38)+'…':ans}`);
-}
-
-function addAnswer(html){
-  const log=document.getElementById('answer-log');
-  const b=document.createElement('div');
-  b.className='answer-bubble';b.innerHTML=html;
-  log.appendChild(b);
-  b.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-function addHint(text){
-  const c=document.getElementById('map-hints');
-  const ch=document.createElement('div');
-  ch.className='hint-chip';
-  ch.textContent=text.length>48?text.slice(0,45)+'…':text;
-  c.appendChild(ch);
-  while(c.children.length>4)c.removeChild(c.firstChild);
-}
 function flashPenalty(){
   const el=document.getElementById('score-display');
   el.classList.add('penalty');setTimeout(()=>el.classList.remove('penalty'),600);
 }
-function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):s;}
+
+// ══════════════════════════════════════
+// MAP CLICK → OVERPASS LOOKUP
+// ══════════════════════════════════════
+async function onMapClick(e){
+  closePopup();
+  document.getElementById('suburb-popup').style.display='none';
+  if(highlightLayer){gameMap.removeLayer(highlightLayer);highlightLayer=null;}
+
+  const {lat,lng}=e.latlng;
+  const pt=e.containerPoint;
+  showLoading(true);
+
+  try{
+    // Query Overpass for nearest highway within ~50m
+    const r=50; // metres
+    const query=`[out:json][timeout:8];
+(
+  way["highway"]["name"](around:${r},${lat},${lng});
+);
+out body geom 1;`;
+    const resp=await fetch('https://overpass-api.de/api/interpreter',{
+      method:'POST',body:'data='+encodeURIComponent(query)
+    });
+    const data=await resp.json();
+    showLoading(false);
+
+    if(data.elements && data.elements.length>0){
+      // Got a road
+      const way=data.elements[0];
+      const roadName=way.tags.name||way.tags['name:en']||'Unknown road';
+      const inDB=!!STREET_MAP[roadName.toLowerCase()];
+      const dbEntry=inDB?STREET_MAP[roadName.toLowerCase()]:null;
+
+      // Draw a highlight polyline from the OSM geometry
+      if(way.geometry){
+        const coords=way.geometry.map(p=>[p.lat,p.lon]);
+        highlightLayer=L.polyline(coords,{
+          color:inDB?'#FFD54F':'#4A9B8E',weight:5,opacity:.85,lineCap:'round'
+        }).addTo(gameMap);
+      }
+      showRoadPopup(roadName, inDB, dbEntry, e.latlng, pt);
+    } else {
+      // No road nearby — try suburb
+      await lookupSuburb(lat,lng,pt);
+    }
+  } catch(err){
+    showLoading(false);
+    // Fallback: try Nominatim reverse geocode
+    try{
+      const r2=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,{headers:{'Accept-Language':'en'}});
+      const d2=await r2.json();
+      const addr=d2.address||{};
+      const road=addr.road||addr.pedestrian||addr.path||'';
+      if(road){
+        const inDB=!!STREET_MAP[road.toLowerCase()];
+        showRoadPopup(road,inDB,STREET_MAP[road.toLowerCase()]||null,e.latlng,pt);
+      } else {
+        const sub=addr.suburb||addr.city_district||addr.town||'';
+        if(sub) showSuburbPopup(sub,pt);
+      }
+    } catch(e2){}
+  }
+}
+
+async function lookupSuburb(lat,lng,pt){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=14`,{headers:{'Accept-Language':'en'}});
+    const d=await r.json();
+    const addr=d.address||{};
+    const sub=addr.suburb||addr.city_district||addr.neighbourhood||addr.town||addr.village||'';
+    if(sub) showSuburbPopup(sub,pt);
+  } catch(e){}
+}
+
+function showLoading(on){
+  document.getElementById('map-loading').style.display=on?'block':'none';
+}
+
+// ══════════════════════════════════════
+// ROAD POPUP
+// ══════════════════════════════════════
+function showRoadPopup(roadName, inDB, dbEntry, latlng, containerPt){
+  popupRoad={name:roadName, inDB, dbEntry, latlng};
+
+  document.getElementById('popup-road-name').textContent=roadName;
+  document.getElementById('popup-not-in-db').textContent=inDB?'':'(not in guess list — can still question)';
+
+  // Guess button only for DB roads
+  document.getElementById('popup-guess').style.display=inDB?'block':'none';
+
+  positionPopup('road-popup', containerPt);
+  document.getElementById('road-popup').classList.add('visible');
+  document.getElementById('tap-hint').style.display='none';
+}
+
+function showSuburbPopup(subName, containerPt){
+  popupSuburb={name:subName};
+  document.getElementById('suburb-popup-name').textContent=subName;
+  positionPopup('suburb-popup', containerPt);
+  document.getElementById('suburb-popup').style.display='block';
+  document.getElementById('tap-hint').style.display='none';
+}
+
+function positionPopup(id, containerPt){
+  const el=document.getElementById(id);
+  el.style.display='block'; // temporarily show to measure
+  const pw=el.offsetWidth||220, ph=el.offsetHeight||180;
+  const mw=window.innerWidth, mh=window.innerHeight;
+  let x=containerPt.x+12, y=containerPt.y-ph/2;
+  if(x+pw>mw-8) x=containerPt.x-pw-12;
+  if(x<8) x=8;
+  if(y+ph>mh-140) y=mh-140-ph;
+  if(y<60) y=60;
+  el.style.left=x+'px';
+  el.style.top=y+'px';
+  if(id==='road-popup') el.classList.remove('visible'); // will be re-added
+  else el.style.display='none'; // will be re-shown
+}
+
+function closePopup(){
+  document.getElementById('road-popup').classList.remove('visible');
+  popupRoad=null;
+  if(highlightLayer){gameMap.removeLayer(highlightLayer);highlightLayer=null;}
+}
+
+// ══════════════════════════════════════
+// POPUP ACTIONS
+// ══════════════════════════════════════
+function popupAsk(axis){
+  if(!popupRoad) return;
+  const refName=popupRoad.name;
+  const dbEntry=popupRoad.dbEntry;
+  closePopup();
+
+  // If inDB, use our precise coordinates. If not, use the latlng of click as reference.
+  let ans;
+  if(dbEntry){
+    ans=answerDirectionalAxis(dbEntry.lat, dbEntry.lng, axis);
+  } else {
+    ans=answerDirectionalAxis(popupRoad.latlng.lat, popupRoad.latlng.lng, axis);
+  }
+
+  currentScore=Math.max(0,currentScore-100);
+  updateScore(); flashPenalty();
+
+  const axisLabel=axis==='NS'?'N or S':'E or W';
+  addAnswer(`<strong>${axisLabel} of ${refName}:</strong> ${ans}`);
+  addHint(`${axisLabel} of ${refName}: ${ans.replace(/<[^>]+>/g,'')}`);
+  switchPanelTab('answers');
+}
+
+function popupGuess(){
+  if(!popupRoad || !popupRoad.inDB) return;
+  const guessName=popupRoad.name;
+  closePopup();
+  submitGuess(guessName);
+}
+
+function suburbAsk(){
+  if(!popupSuburb) return;
+  const sub=popupSuburb.name;
+  document.getElementById('suburb-popup').style.display='none';
+  popupSuburb=null;
+
+  currentScore=Math.max(0,currentScore-250);
+  updateScore(); flashPenalty();
+
+  const inIt=currentStreet.s.some(x=>x.toLowerCase()===sub.toLowerCase());
+  const ans=inIt
+    ?`<strong>Yes</strong> — it passes through ${sub}`
+    :`<strong>No</strong> — it does not pass through ${sub}`;
+  addAnswer(`<strong>Suburb — ${sub}:</strong> ${ans}`);
+  addHint(`${sub}: ${inIt?'Yes':'No'}`);
+  switchPanelTab('answers');
+}
+
+// ══════════════════════════════════════
+// DIRECTIONAL ALGORITHM
+// ══════════════════════════════════════
+function answerDirectionalAxis(refLat, refLng, axis){
+  const s=currentStreet;
+  const latDiff=s.lat-refLat;  // +ve = secret is south
+  const lngDiff=s.lng-refLng;  // +ve = secret is east
+  const dLat=Math.abs(latDiff)*111;
+  const dLng=Math.abs(lngDiff)*80;
+
+  if(axis==='NS'){
+    if(dLat<0.4) return `Roughly the same latitude`;
+    return `<strong>${latDiff>0?'South':'North'}</strong>`;
+  } else {
+    if(dLng<0.4) return `Roughly the same longitude`;
+    return `<strong>${lngDiff>0?'East':'West'}</strong>`;
+  }
+}
+
+// ══════════════════════════════════════
+// INFO QUESTIONS (about the secret road)
+// ══════════════════════════════════════
+const INFO_COST=[0,500];
+const INFO_LABEL=["Part of Melbourne","N–S or E–W road"];
+
+function askInfoQ(idx){
+  const btn=document.getElementById('qbtn-'+idx);
+  if(btn.disabled) return;
+  btn.disabled=true;
+  const cost=INFO_COST[idx];
+  if(cost>0){currentScore=Math.max(0,currentScore-cost);updateScore();flashPenalty();}
+  const s=currentStreet;
+  let ans;
+  if(idx===0) ans=cap(s.region);
+  if(idx===1) ans=s.o==='NS'?'Primarily North–South':'Primarily East–West';
+  addAnswer(`<strong>${INFO_LABEL[idx]}:</strong> ${ans}`);
+  addHint(ans);
+  if(idx!==0) switchPanelTab('answers');
+}
 
 // ══════════════════════════════════════
 // GUESS
 // ══════════════════════════════════════
-function onGuessInput(){
-  const val=document.getElementById('guess-input').value.toLowerCase().trim();
-  const list=document.getElementById('ac-list');
-  if(val.length<2){list.classList.remove('open');return;}
-  const matches=STREETS.filter(s=>s.name.toLowerCase().includes(val)).slice(0,8);
-  if(!matches.length){list.classList.remove('open');return;}
-  list.innerHTML=matches.map(s=>`<div class="ac-item" onclick="selectGuess('${s.name.replace(/'/g,"\\'")}')">📍 ${s.name}</div>`).join('');
-  list.classList.add('open');
-}
-function selectGuess(name){
-  document.getElementById('guess-input').value=name;
-  document.getElementById('ac-list').classList.remove('open');
-}
-function submitGuess(){
-  const guess=document.getElementById('guess-input').value.trim();
-  if(!guess)return;
-  document.getElementById('ac-list').classList.remove('open');
-  document.getElementById('guess-submit').disabled=true;
-  const correct=guess.toLowerCase()===currentStreet.name.toLowerCase();
+function submitGuess(guessName){
+  const correct=guessName.toLowerCase()===currentStreet.name.toLowerCase();
   const pts=correct?currentScore:0;
   const isNew=updateHiScore(currentUser,pts);
+
   document.getElementById('result-verdict').textContent=correct?'CORRECT!':'WRONG!';
   document.getElementById('result-verdict').className='result-verdict '+(correct?'win':'lose');
   document.getElementById('result-street').innerHTML=`The street was <strong>${currentStreet.name}</strong>`;
   document.getElementById('result-pts').textContent=pts.toLocaleString();
-  const lb=getLB(),rec=lb.find(r=>r.name===(currentUser||'Guest'));
+
+  const lb=getLB(), rec=lb.find(r=>r.name===(currentUser||'Guest'));
   let hi='';
   if(currentUser&&currentUser!=='Guest'){
     hi=`Your best: ${(rec?.best||0).toLocaleString()} pts`;
@@ -838,18 +1001,49 @@ function submitGuess(){
   }
   document.getElementById('result-hi').innerHTML=hi;
   showScreen('result');
+
+  // Result map: draw the actual road as a polyline
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     if(resultMap){resultMap.remove();resultMap=null;}
-    resultMap=L.map('result-map',{zoomControl:false,dragging:false,scrollWheelZoom:false})
-      .setView([currentStreet.lat,currentStreet.lng],14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution:'© OpenStreetMap contributors',maxZoom:18
+    const s=currentStreet;
+    resultMap=L.map('result-map',{zoomControl:false,dragging:true,scrollWheelZoom:false,touchZoom:true})
+      .setView([s.lat,s.lng],14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+      subdomains:'abcd',maxZoom:20,
+      attribution:'© OpenStreetMap contributors © CARTO'
     }).addTo(resultMap);
-    L.circleMarker([currentStreet.lat,currentStreet.lng],{
-      radius:11,fillColor:'#FFD54F',color:'#0B1F3A',weight:2.5,fillOpacity:.92
-    }).addTo(resultMap).bindPopup(`<strong>${currentStreet.name}</strong>`).openPopup();
+    const line=L.polyline([[s.lat1,s.lng1],[s.lat2,s.lng2]],{
+      color:'#FFD54F',weight:7,opacity:.95,lineCap:'round'
+    }).addTo(resultMap);
+    L.circleMarker([s.lat,s.lng],{
+      radius:8,fillColor:'#FFD54F',color:'#0B1F3A',weight:2.5,fillOpacity:1
+    }).addTo(resultMap).bindPopup(`<strong>${s.name}</strong>`).openPopup();
+    resultMap.fitBounds(line.getBounds().pad(0.35));
   }));
 }
+
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
+function addAnswer(html){
+  const log=document.getElementById('answer-log');
+  const noAns=log.querySelector('.no-answers');
+  if(noAns) noAns.remove();
+  const b=document.createElement('div');
+  b.className='answer-bubble'; b.innerHTML=html;
+  log.appendChild(b);
+  b.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function addHint(text){
+  const plain=text.replace(/<[^>]+>/g,'');
+  const c=document.getElementById('map-hints');
+  const ch=document.createElement('div');
+  ch.className='hint-chip';
+  ch.textContent=plain.length>52?plain.slice(0,49)+'…':plain;
+  c.appendChild(ch);
+  while(c.children.length>5) c.removeChild(c.firstChild);
+}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):s;}
 </script>
 </body>
 </html>
